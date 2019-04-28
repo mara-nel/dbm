@@ -33,7 +33,6 @@ var dropStart;
 
 var board = [];
 var bag = [];
-var lastReset;
 var bagText = document.getElementById('bagsize');
 
 // --------------------------------------------------
@@ -579,14 +578,6 @@ Piece.prototype.lock = function () {
     if (combo > 0) { // but we were in the middle of combo
       gameOver(LOSE);
     }
-    // If this isn't commented, then after gameover,
-    // you can't see how you just did
-    //
-    // If you display what there combo was in some
-    // other way, resetting combo to zero should be
-    // fine
-    //
-    // combo = 0;
   }
 };
 

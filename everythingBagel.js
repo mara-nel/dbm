@@ -23,7 +23,6 @@ var keydownIntervals = {};
 
 var board = [];
 var bag = [];
-var lastReset;
 var bagText = document.getElementById('bagsize');
 
 // --------------------------------------------------
@@ -111,19 +110,61 @@ var currentPieceNumber;
 var isPieceHeld;
 
 // --------------------------------------------------
-// For New Games
+// For Starting and Ending of Games
 document.getElementById('newGame').onclick = reset;
+var WIN   = 1;
+var LOSE  = 0;
 
 function reset() {
-  var now = Date.now();
-  var delta = now - lastReset;
-  if (delta > 100) {
-    lastReset = Date.now();
-    initGame();
-    drawBoard();
-    main();
-  }
+  gamesCount += 1;
+  initGame();
+  drawBoard();
+  main();
 }
+
+function gameOver(result) {
+  var message;
+  if (result === WIN) {
+    message = 'Success!'
+    //if(playingMissions) { 
+    //  currentMission += 1;
+    //
+    //currentMission %= missions.length;
+    //}
+  } else {
+    message = 'GAME OVER'
+  }
+  context.globalAlpha = 0.4;
+  setColor('black');
+  context.fRect(0,
+          TOPSPACE * tilesz,
+          canvas.width,
+          canvas.height-TOPSPACE * tilesz);
+  setColor(menuColor);
+  context.globalAlpha = 1;
+  context.fRect(0.5 * tilesz,
+          canvas.height / 2.5 - 1.5*tilesz,
+          canvas.width - (tilesz),
+          5.5 * tilesz);
+  context.font = '' + tilesz + 'px Arial';
+  setColor('black');
+  context.textAlign = 'center';
+  context.fillText(message,
+            canvas.width / 2,
+            canvas.height / 2.5);
+  context.fillText('(press r to play agian)',
+            canvas.width/2,
+            canvas.height / 2.5 + 2.5 * tilesz);
+
+  gdone = true;
+}
+
+// --------------------------------------------------
+// For Game Modes
+var EB = 1 // everything bagel
+var AC = 2 // all clear mode
+
+var gameMode = EB; 
 
 // --------------------------------------------------
 // For Scoring
@@ -132,6 +173,8 @@ var combo = 0;
 var bcombo = 0;
 var squares = 0;
 var numpieces = 0;
+var acCount = 0;
+var gamesCount = 0;
 
 function initScores() {
   lines = 0;
@@ -146,21 +189,30 @@ function drawScoreBar() {
   context.fRect(0, 0,
     canvas.width,
     TOPSPACE*tilesz-1);
-  //ctx.font = '' + tilesz + 'px Arial';
   setColor('black');
-  context.font = '' + 1.25 * tilesz + 'px Arial';
-  context.fillText('Lines: ' + lines,
+  if(gameMode === AC) {
+    context.font = '' + 1.25 * tilesz + 'px Arial';
+    context.fillText('All Clears: ' + acCount,
+            tilesz,
+            2.5 * tilesz);
+    context.fillText(' Games: ' + gamesCount,
+            canvas.width/2 + tilesz,
+            2.5 * tilesz);
+  } else if (gameMode === EB) {
+    context.font = '' + 1.25 * tilesz + 'px Arial';
+    context.fillText('Lines: ' + lines,
             tilesz,
             1.5 * tilesz);
-  context.fillText(' Pieces: ' + numpieces,
+    context.fillText(' Pieces: ' + numpieces,
             canvas.width/2 + tilesz,
             1.5 * tilesz);
-  context.fillText('Combo: ' + combo,
+    context.fillText('Combo: ' + combo,
             tilesz,
             3.5 * tilesz);
-  context.fillText(' Best: ' + bcombo,
+    context.fillText(' Best: ' + bcombo,
             canvas.width/2 + tilesz,
             3.5 * tilesz);
+  }
 }
 
 // --------------------------------------------------
@@ -416,6 +468,24 @@ function checkForSquares() {
 }
 
 // --------------------------------------------------
+// For checking for all clears
+
+function checkForAllClear() {
+  // I think empty bottom row is equivalent to an all clear
+  var empty = true;
+  for (let c = 0; c < BOARDWIDTH; c++) {
+    if (board[BOARDHEIGHT-1][c][0]) {
+      empty = false;
+    }
+  }
+  if (empty) {
+    acCount += 1;
+    drawScoreBar();
+    gameOver(WIN);
+  }
+}
+
+// --------------------------------------------------
 
 function initBoard() {
   for (let r = 0; r < BOARDHEIGHT; r++) {
@@ -452,9 +522,6 @@ function holdPiece() {
 }
 
 function drawHold() {
-  // on one hand I should check to make sure there is a piece held to draw
-  // but I can also try to assume that this function will never be called
-  // if no piece is held
   setColor('black');
   context.fRect(sideBarX * tilesz + 1,
     (TOPSPACE + BOARDHEIGHT - 4) * tilesz,
@@ -634,21 +701,23 @@ Piece.prototype.lock = function () {
 
       if (this.y + iy < 0) {
         // Game ends!
-        gameOver();
+        gameOver(LOSE);
         return;
       }
 
       board[this.y + iy][this.x + ix] = [this.color, this.id];
     }
   }
-
-  checkForSquares();
+  if (gameMode === EB) {
+    checkForSquares();
+  }
   var gsBonus = 0;
   var nlines = 0;
   for (let y = 0; y < BOARDHEIGHT; y++) {
     var line = true;
     var golds = [];
     var silvers = [];
+    // check if row at height y is full
     for (let x = 0; x < BOARDWIDTH; x++) {
       line = line && board[y][x][0] !== '';
     }
@@ -698,6 +767,9 @@ Piece.prototype.lock = function () {
     }
 
     drawBoard();
+    if (gameMode === AC) {
+      checkForAllClear();
+    }
   } else {
     combo = 0;
   }
@@ -786,6 +858,78 @@ document.body.addEventListener('keyup', function (e) {
   }
 }, false);
 
+// --------------------------------------------------
+// Recognizing swipes
+document.addEventListener('touchstart', handleTouchStart, false);
+document.addEventListener('touchmove', handleTouchMove, false);
+
+var xDown = null;
+var yDown = null;
+
+function getTouches(evt) {
+  return evt.touches || // browser API
+         evt.originalEvent.touches; // jQuery
+}
+
+function handleTouchStart(evt) {
+  const firstTouch = getTouches(evt)[0];
+  xDown = firstTouch.clientX;
+  yDown = firstTouch.clientY;
+};
+
+function handleTouchMove(evt) {
+  if (!xDown || !yDown) {
+    return;
+  }
+  if (gdone) {
+    return;
+  }
+
+  var xUp = evt.touches[0].clientX;
+  var yUp = evt.touches[0].clientY;
+
+  var xDiff = xDown - xUp;
+  var yDiff = yDown - yUp;
+
+  if (Math.abs(xDiff) > Math.abs(yDiff)) { /* most significant */
+    if (xDiff > 0) {
+      /* left swipe */
+      piece.moveLeft();
+    } else {
+      /* right swipe */
+      piece.moveRight();
+    }
+  } else {
+    if (yDiff > 0) {
+      /* up swipe */
+      holdPiece();
+    } else {
+      /* down swipe */
+      while (piece.down() == 0) {}
+    }
+  }
+  /* reset values */
+  xDown = null;
+  yDown = null;
+};
+// --------------------------------------------------
+// Recognizing taps/touches/clicks
+document.addEventListener('click', handleClick, false);
+
+function handleClick(evt) {
+  var x = evt.clientX;
+
+  if (gdone) {
+    reset();
+  }
+  if (x < wWidth / 2) {
+    piece.rotate(3);
+  } else {
+    piece.rotate(1);
+  }
+};
+
+// --------------------------------------------------
 function key(k) {
   if (k === 82) { // Player pressed r
     reset();
@@ -911,34 +1055,33 @@ function initGame() {
   piece = null;
 }
 
-function gameOver() {
-  context.globalAlpha = 0.4;
-  setColor('black');
-  context.fRect(0,
-          TOPSPACE * tilesz,
-          canvas.width,
-          canvas.height-TOPSPACE * tilesz);
-  setColor(menuColor);
-  context.globalAlpha = 1;
-  context.fRect(0.5 * tilesz,
-          canvas.height / 2.5 - 2*tilesz,
-          canvas.width - (tilesz),
-          5.5 * tilesz);
-  context.font = '' + 1.25 * tilesz + 'px Arial';
-  setColor('black');
-  context.textAlign = 'center';
-  context.fillText('GAME OVER',
-            canvas.width / 2,
-            canvas.height / 2.5);
-  context.fillText('(press r to play again)',
-            canvas.width/2,
-            canvas.height / 2.5 + 2 * tilesz);
-//
-  // done = true;
-  gdone = true;
+function playEB() {
+  BOARDWIDTH = 10;
+  BOARDHEIGHT = 20;
+  LEFTSPACE = 2;
+  RIGHTSPACE = 5;
+  TOPSPACE = 4;
+  BOARDPERCENT = 0.7;
+  PREVIEW = 5;
+  BOTTOMSPACE = 1;
+
+  gameMode = EB;
+  initGame();
+  drawBoard();
+  main();
 }
 
-lastReset = Date.now();
-initGame();
-drawBoard();
-main();
+function playAC() {
+  BOARDWIDTH = 10;
+  BOARDHEIGHT = 14;
+  LEFTSPACE = 2;
+  RIGHTSPACE = 5;
+  TOPSPACE = 4;
+  BOARDPERCENT = 0.6;
+  PREVIEW = 3;
+
+  gameMode = AC;
+  initGame();
+  drawBoard();
+  main();
+}
