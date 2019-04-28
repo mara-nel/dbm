@@ -110,20 +110,19 @@ var WIN   = 1;
 var LOSE  = 0;
 
 function reset() {
-  var now = Date.now();
-  var delta = now - lastReset;
-  if (delta > 100) {
-    lastReset = Date.now();
-    initGame();
-    drawBoard();
-    main();
-  }
+  initGame();
+  drawBoard();
+  main();
 }
 
 function gameOver(result) {
   var message;
   if (result === WIN) {
     message = 'YOU WON'
+    if(playingMissions) { 
+      currentMission += 1;
+      currentMission %= missions.length;
+    }
   } else {
     message = 'GAME OVER'
   }
@@ -156,6 +155,14 @@ function gameOver(result) {
 }
 
 // --------------------------------------------------
+// For Mission Gameplay
+var playingMissions = false;
+var currentMission = 0;
+
+// eventually there should be some menu to choose to play missions
+// or not, maybe game state should encapsulate all of this
+
+// --------------------------------------------------
 // For Scoring
 var combo = 0;
 var bcombo = 0;
@@ -181,8 +188,10 @@ function drawScoreBar() {
 // --------------------------------------------------
 // For Piece Preview
 function updatePreview() {
-  if (bag.length < PREVIEW) {
-    makeAndShuffleBag();
+  if (!playingMissions) {
+    if (bag.length < PREVIEW) {
+      makeAndShuffleBag();
+    }
   }
 
   drawPreview();
@@ -194,7 +203,7 @@ function drawPreview() {
     TOPSPACE * tilesz,
     RIGHTSPACE * tilesz,
     (BOARDHEIGHT - 4.1) * tilesz);
-  for (let previewX = 0; previewX < PREVIEW; previewX++) {
+  for (let previewX = 0; previewX < Math.min(PREVIEW,bag.length); previewX++) {
     var nextToComeNumber = bag[bag.length - (1 + previewX)];
     var nextToComePiece = pieces[nextToComeNumber];
     setColor(nextToComePiece[1]);
@@ -287,12 +296,20 @@ function newPieceDet(blockNumber) {
 
 function nextPiece() {
 
-  if (bag.length === 0) {
-    makeAndShuffleBag();
-    return newPieceDet(bag.pop());
-  } else {
-    return newPieceDet(bag.pop());
-  }
+    if (bag.length > 0) {
+      return newPieceDet(bag.pop());
+    } else if (isPieceHeld) {
+      isPieceHeld = 0;
+      drawHold();
+      return newPieceDet(heldPieceNumber);
+    } else {
+      // in mission mode, this is a win condition
+      if (playingMissions) {
+        drawScoreBar();
+        gameOver(WIN)
+      }
+    }
+
 }
 var possibleRandomizer = document.getElementsByName('randomizer');
 bagSize = 0;
@@ -348,7 +365,6 @@ function drawHold() {
     (TOPSPACE + BOARDHEIGHT - 3) * tilesz,
     RIGHTSPACE * tilesz,
     4.5 * tilesz);
-  
   if (isPieceHeld) {
     setColor(heldPiece[1]);
     var size = heldPiece[0][0].length;
@@ -733,6 +749,31 @@ function key(k) {
   if (k === 82) { // Player pressed r
     reset();
   }
+  //mission navigation is prettty buggy right now
+  if (k === 69) { // Player pressed e
+    if (playingMissions) {
+      if (currentMission !== 0) {
+        currentMission -= 1;
+        currentMission %= missions.length;
+      } else {
+        currentMission = missions.length;
+      }
+      reset();
+    }
+  }
+  if (k === 84) { // Player pressed t
+    if (playingMissions) {
+      currentMission += 1;
+      currentMission %= missions.length;
+      reset();
+    }
+  }
+  if (k === 77) { // Player pressed m
+    // toggle if missions are being played or not
+    playingMissions = !playingMissions;
+    reset();
+  }
+
   if (gdone) {
     return;
   }
@@ -839,11 +880,17 @@ function main() {
 }
 
 function initGame() {
+  piece = null;
   initCanvas();
   initScores();
   initBoard();
   initSideBoard();
-  initRandomizer();
+  if (!playingMissions) {
+    initRandomizer();
+  } else {
+    bag = missions[currentMission].slice().reverse();
+    //bag = missions[1].reverse();
+  }
   isPieceHeld = 0;
   done = false;
   gdone = false;
