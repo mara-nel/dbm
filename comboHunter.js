@@ -105,8 +105,9 @@ var isPieceHeld;
 // --------------------------------------------------
 // For Starting and Ending of Games
 document.getElementById('newGame').onclick = reset;
-var WIN   = 1;
-var LOSE  = 0;
+var WIN     = 1;
+var LOSE    = 0;
+var BADWIN  = -1
 
 function reset() {
   initGame();
@@ -115,15 +116,21 @@ function reset() {
 }
 
 function gameOver(result) {
-  var message;
+  var message1 = '';
+  var message2 = '';
+  var replayOffset = 2;
+
   if (result === WIN) {
-    message = 'YOU WON'
+    message1 = 'YOU WON'
     if(gameMode === MS) { 
       currentMission += 1;
       currentMission %= missions.length;
     }
-  } else {
-    message = 'GAME OVER'
+  } else if (result === LOSE) {
+    message1 = 'GAME OVER';
+  } else if (result === BADWIN) {
+    message1 = 'NOT GOOD';
+    message2 = 'ENOUGH...';
   }
   context.globalAlpha = 0.4;
   setColor('black');
@@ -133,22 +140,33 @@ function gameOver(result) {
           canvas.height-TOPSPACE * tilesz);
   setColor(menuColor);
   context.globalAlpha = 1;
-  context.fRect(0.5 * tilesz,
+  if (!message2) {
+    context.fRect(0.5 * tilesz,
           canvas.height / 2.5 - 1.5*tilesz,
           canvas.width - (tilesz),
           5.5 * tilesz);
+  } else {
+    context.fRect(0.5 * tilesz,
+          canvas.height / 2.5 - 1.5*tilesz,
+          canvas.width - (tilesz),
+          6.5 * tilesz);
+    replayOffset = 3;
+  }
   context.font = '' + tilesz + 'px Arial';
   setColor('black');
   context.textAlign = 'center';
-  context.fillText(message,
+    context.fillText(message1,
             canvas.width / 2,
             canvas.height / 2.5);
+    context.fillText(message2,
+            canvas.width / 2,
+            canvas.height / 2.5 + tilesz);
   context.fillText('(click anywhere',
             canvas.width/2,
-            canvas.height / 2.5 + 2 * tilesz);
+            canvas.height / 2.5 + replayOffset * tilesz);
   context.fillText('to play again)',
             canvas.width/2,
-            canvas.height / 2.5 + 3 * tilesz );
+            canvas.height / 2.5 + (replayOffset + 1) * tilesz );
 
   gdone = true;
 }
@@ -194,9 +212,16 @@ function drawScoreBar() {
   setColor('black');
   context.textAlign = 'center';
   context.font = '' + tilesz + 'px Arial';
-  context.fillText('Combo: ' + combo + ' Best: ' + bcombo,
+  if (gameMode === CH) {
+    context.fillText('Combo: ' + combo + ' Best: ' + bcombo,
             canvas.width/2,
             TOPSPACE * tilesz / 1.5);
+  } else if (gameMode === MS) {
+    var readableMission = currentMission + 1;
+    context.fillText('Combo: ' + combo + ' Mission: ' + readableMission,
+            canvas.width/2,
+            TOPSPACE * tilesz / 1.5);
+  }
 }
 
 // --------------------------------------------------
@@ -317,10 +342,13 @@ function nextPiece() {
       drawHold();
       return newPieceDet(heldPieceNumber);
     } else {
-      // in mission mode, this is a win condition
       if (gameMode === MS) {
         drawScoreBar();
-        gameOver(WIN)
+        if (combo > 0) {
+          gameOver(WIN);
+        } else {
+          gameOver(BADWIN);
+        }
       }
     }
 
@@ -758,12 +786,12 @@ function key(k) {
   //mission navigation is prettty buggy right now
   if (k === 69) { // Player pressed e
     if (gameMode = MS) {
-      if (currentMission !== 0) {
-        currentMission -= 1;
+      //if (currentMission !== 0) {
+        currentMission += missions.length - 1;
         currentMission %= missions.length;
-      } else {
-        currentMission = missions.length;
-      }
+     // } else {
+     //   currentMission = missions.length;
+     // }
       reset();
     }
   }
