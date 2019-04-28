@@ -118,7 +118,7 @@ function gameOver(result) {
   var message;
   if (result === WIN) {
     message = 'YOU WON'
-    if(playingMissions) { 
+    if(gameMode === MS) { 
       currentMission += 1;
       currentMission %= missions.length;
     }
@@ -154,9 +154,24 @@ function gameOver(result) {
 }
 
 // --------------------------------------------------
-// For Mission Gameplay
-var playingMissions = false;
+// For Game Modes
+var CH = 1 // main combo hunter
+var MS = 2 // play missions
+
+var gameMode = CH;
+
+// --------------------------------------------------
+// For Mission Mode
+
 var currentMission = 0;
+
+function toggleMissionMode() {
+  if (gameMode !== MS) {
+    gameMode = MS;
+  } else {
+    gameMode = CH;
+  }
+}
 
 // eventually there should be some menu to choose to play missions
 // or not, maybe game state should encapsulate all of this
@@ -187,7 +202,7 @@ function drawScoreBar() {
 // --------------------------------------------------
 // For Piece Preview
 function updatePreview() {
-  if (!playingMissions) {
+  if (gameMode === CH) {
     if (bag.length < PREVIEW) {
       makeAndShuffleBag();
     }
@@ -303,7 +318,7 @@ function nextPiece() {
       return newPieceDet(heldPieceNumber);
     } else {
       // in mission mode, this is a win condition
-      if (playingMissions) {
+      if (gameMode === MS) {
         drawScoreBar();
         gameOver(WIN)
       }
@@ -742,7 +757,7 @@ function key(k) {
   }
   //mission navigation is prettty buggy right now
   if (k === 69) { // Player pressed e
-    if (playingMissions) {
+    if (gameMode = MS) {
       if (currentMission !== 0) {
         currentMission -= 1;
         currentMission %= missions.length;
@@ -753,7 +768,7 @@ function key(k) {
     }
   }
   if (k === 84) { // Player pressed t
-    if (playingMissions) {
+    if (gameMode = MS) {
       currentMission += 1;
       currentMission %= missions.length;
       reset();
@@ -761,7 +776,7 @@ function key(k) {
   }
   if (k === 77) { // Player pressed m
     // toggle if missions are being played or not
-    playingMissions = !playingMissions;
+    toggleMissionMode();
     reset();
   }
 
@@ -876,7 +891,7 @@ function initGame() {
   initScores();
   initBoard();
   initSideBoard();
-  if (!playingMissions) {
+  if (gameMode === CH) {
     initRandomizer();
   } else {
     bag = missions[currentMission].slice().reverse();
@@ -889,8 +904,15 @@ function initGame() {
   piece = null;
 }
 
-window.onload = function () {
-  lastReset = Date.now();
+function playCH() {
+  gameMode = CH;
+  initGame();
+  drawBoard();
+  main();
+}
+
+function playMS() {
+  gameMode = MS;
   initGame();
   drawBoard();
   main();

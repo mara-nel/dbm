@@ -933,8 +933,9 @@ function handleClick(evt) {
 function key(k) {
   if (k === 82) { // Player pressed r
     reset();
+  } else if (k === 80) { // Player pressed p
+    gdone = !gdone;
   }
-
   if (gdone) {
     return;
   }
