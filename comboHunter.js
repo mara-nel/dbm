@@ -72,8 +72,6 @@ context.fRect = function (x, y, w, h) {
 };
 
 function initCanvas() {
-  // wHeight       = window.innerHeight;
-  // wWidth        = window.innerWidth;
   wHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   wWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   tilesz = parseInt(wHeight * BOARDPERCENT / BOARDHEIGHT);

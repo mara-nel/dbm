@@ -45,6 +45,7 @@ var sideBarX;
 var boardX;
 var tilesz;
 var wHeight;
+var wWidth;
 var thinLine;
 var thickLine;
 
@@ -63,7 +64,8 @@ context.fRect = function (x, y, w, h) {
 };
 
 function initCanvas() {
-  wHeight = window.innerHeight;
+  wHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  wWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   tilesz = parseInt(wHeight * BOARDPERCENT / BOARDHEIGHT);
   thinLine = 0.0125;
   thickLine = 0.25;
