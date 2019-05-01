@@ -162,6 +162,42 @@ function gameOver(result) {
 }
 
 // --------------------------------------------------
+// For Managing Randomness
+var jsf;
+var gameSeed    = document.getElementById('theSeed');
+var seedConfirm = document.getElementById("seedCheck");
+
+jsf = Math.random; // default for unseeded games
+
+// Bob Jenkins' JSF
+function JSF(seed) {
+    function jsf() {
+        var e = s[0] - (s[1]<<27 | s[1]>>>5);
+         s[0] = s[1] ^ (s[2]<<17 | s[2]>>>15),
+         s[1] = s[2] + s[3],
+         s[2] = s[3] + e, s[3] = s[0] + e;
+        return (s[3] >>> 0) / 4294967296; // 2^32
+    }
+    seed >>>= 0;
+    var s = [0xf1ea5eed, seed, seed, seed];
+    for(var i=0;i<20;i++) jsf();
+    return jsf;
+}
+
+function seedRandom() {
+  if (!!gameSeed && !!seedConfirm) {
+    var seed  = document.getElementById("theSeed").value;
+    if (!parseInt(seed)){ // not a valid seed 
+      seedConfirm.innerHTML = "&#10062";
+    } else { // valid seed
+      jsf = JSF(seed);
+      seedConfirm.innerHTML = "&#9989";
+      reset();
+    }
+  }
+}
+
+// --------------------------------------------------
 // For Game Modes
 var EB = 1 // everything bagel
 var AC = 2 // all clear mode
@@ -267,7 +303,7 @@ function drawPreview() {
 // For Randomizer
 var bagSize; // this should change based on what randomizer is chosen
 function getRandomInt(max) {
-  return Math.floor(Math.random() * Math.floor(max));
+  return Math.floor(jsf() * Math.floor(max));
 }
 
 function shuffle(array) {
@@ -278,7 +314,7 @@ function shuffle(array) {
   // While there remain elements to shuffle...
   while (currentIndex !== 0) {
     // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
+    randomIndex = Math.floor(jsf() * currentIndex);
     currentIndex -= 1;
 
     // And swap it with the current element.
@@ -935,6 +971,8 @@ function handleClick(evt) {
 function key(k) {
   if (k === 82) { // Player pressed r
     reset();
+  } else if (k === 86) { // Player pressed v
+    seedRandom();
   } else if (k === 80) { // Player pressed p
     gdone = !gdone;
   }

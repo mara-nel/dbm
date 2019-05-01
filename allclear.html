@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<title>All Clear</title>
-		<style>
+  <head>
+    <meta charset="utf-8" />
+    <title>All Clear</title>
+    <style>
 			html { background: #F7F7F7;
                 touch-action: pinch-zoom;
       }
@@ -18,25 +18,27 @@
       }
 		</style>
 	</head>
-	<body onload="playAC()">
-      <div class="centered">
-		   <canvas id="board">
-		   </canvas>
-         <form id="randomizerChoice">
-           <input type="radio" name="randomizer" value="1"checked>1 bag
-           <input type="radio" name="randomizer" value="2">2 bag
-           <input type="radio" name="randomizer" value="7">7 bag  
-           <input type="radio" name="randomizer" value="0">random
-         </form>
-         <form id="gridOn">
-           Gridlines:
-           <input type="radio" name="grids" value="1">on
-           <input type="radio" name="grids" value="0" checked>off
-         </form>
-        <span id="bagsize"></span>
-        <button type="button" id="newGame">New Game</button>
-      </div>
+  <body onload="playAC()">
+    <div class="centered">
+      <canvas id="board">
+      </canvas>
+      <form id="randomizerChoice">
+        <input type="radio" name="randomizer" value="1"checked>1 bag
+        <input type="radio" name="randomizer" value="2">2 bag
+        <input type="radio" name="randomizer" value="7">7 bag  
+        <input type="radio" name="randomizer" value="0">random
+      </form>
+      <label>Random Seed: <input id="theSeed" value="qaz"></label>
+      <button type="button" onclick="seedRandom()">Seed and Reset</button>
+      <span id="seedCheck"></span>
+      <form id="gridOn">Gridlines:
+        <input type="radio" name="grids" value="1">on
+        <input type="radio" name="grids" value="0" checked>off
+      </form>
+      <span id="bagsize"></span>
+      <button type="button" id="newGame">New Game</button>
+    </div>
     <script src="bricks.js"></script>
     <script src="everythingBagel.js"></script>
-	</body>
+  </body>
 </html>
