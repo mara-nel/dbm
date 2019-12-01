@@ -127,8 +127,8 @@ function gameOver(result) {
   } else if (result === LOSE) {
     message1 = 'GAME OVER';
   } else if (result === BADWIN) {
-    message1 = 'NOT GOOD';
-    message2 = 'ENOUGH...';
+    message1 = 'TRY AGAIN';
+    message2 = '';
   }
   context.globalAlpha = 0.4;
   setColor('black');
