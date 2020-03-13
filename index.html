@@ -3,15 +3,90 @@
 	<head>
 		<meta charset="utf-8" />
 		<title>DBM</title>
+    <style>
+      html { background: #F7F7F7;
+                touch-action: pinch-zoom;
+      }   
+    </style>
 	</head>
 	<body>
+      <h1>
+      Digital Brick Masonry
+      </h1>
+      <h2>
+        All Versions
+      </h2>
+      10 Wide:
       <ul>
-         <li><a href="everythingBagel.html">play with all the good stuff</a></li>
-         <li><a href="allclear.html">practice perfect clear openers</a></li>
+         <li><a href="everythingBagel.html">10 Wide Full</a></li>
+         <li><a href="allclear.html">10 Wide Opener</a></li>
       </ul>
+      Combo 4 Wide:
       <ul>
-         <li><a href="comboHunter.html">ComboHunter</a></li>
-         <li><a href="comboHunterMissions.html">ComboHunter Missions/Tutorial</a></li>
+         <li><a href="comboHunterMissions.html">ComboHunter Missions</a></li>
+         <li><a href="comboHunter.html">ComboHunter Freeplay</a></li>
       </ul>
+      <h2>
+      About
+      </h2>
+      <p>
+      This is a repository for a growing collection of javascript games centered on laying digital bricks.</p>
+
+      <p>
+      There are currently 4 different modes of play and these can be generally classified into 2 different categories: 10 wide and combo 4 wide.
+      All four share the property that new bricks are determined and the user needs to place them onto the playing field. 
+      While they make their decision, the brick falls from the top of the board to the bottom, stopping on any previous played bricks that prevent it from falling further.
+      When a row in the playing field is completely full of bricks, then that row of bricks is removed and any bricks locked into place above this row are shifted down one row.
+      </p>
+
+      <p>
+      Currently all four modes support the choice of how to define randomness in how the next pieces are chosen.
+      </p>
+
+      <h3>
+      10 Wide
+      </h3>
+      <p>
+      10 Wide includes a playing field that stretches 10 units wide.
+      </p>
+
+      <p>
+      A game is finished when a brick is locked into place and any portion of it is above the screen.
+      </p>
+
+      <p>
+      In the 10 wide full version there is support for the formation of gold and obsidian squares. These are formed by making a 4 by 4 square in the playing field by using exactly 4 bricks.
+      If all 4 bricks are the same shape, then it is gold, otherwise it is obsidian.
+      </p>
+
+      <p>
+      In the 10 wide opener practice the goal is not survival but to practice perfect clears, in which the round is considered a win, or to practice t spin openers. 
+      In game recognition of t spins are not currently implemented.
+      </p>
+      <h3>
+      Combo 4 Wide
+      </h3>
+      <p>
+      In combo 4 wide the goal is comboing. 
+      A combo is a performing a line clear immediately after a line clear.
+      Successively clearing lines, brick after brick, will increase the length of your combo.
+      </p>
+      <p>
+      Currently these are seperated into 2 versions.
+      In both, when a combo ends the game ends. 
+      This means a player should be very mindful of when they perform their first line clear, as that marks the beginning of a possible combo.
+      </p>
+
+      <p>
+      The missions version serves as an introduction to this version of play.
+      Hand coded strings of bricks have been thought of and the player then needs to survive playing all of the pieces.
+      Many of these missions can be played such that the combo begins on the second piece or the last piece played causes a perfect clear.
+      Currently these are only optional challenges.
+      </p>
+
+      <p>
+      Eventually it is planned for these two versions to be implemented into a single interface where users are able to switch back and forth between free play and missions.
+      </p>
+    <script src="homeMenu.js"></script>
 	</body>
 </html>
