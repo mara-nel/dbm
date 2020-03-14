@@ -128,7 +128,6 @@ function gameOver(result) {
     message1 = 'GAME OVER';
   } else if (result === BADWIN) {
     message1 = 'TRY AGAIN';
-    message2 = '';
   }
   context.globalAlpha = 0.4;
   setColor('black');
@@ -138,35 +137,55 @@ function gameOver(result) {
           canvas.height-TOPSPACE * tilesz);
   setColor(menuColor);
   context.globalAlpha = 1;
-  if (!message2) {
-    context.fRect(0.5 * tilesz,
-          canvas.height / 2.5 - 1.5*tilesz,
-          canvas.width - (tilesz),
-          5.5 * tilesz);
-  } else {
-    context.fRect(0.5 * tilesz,
-          canvas.height / 2.5 - 1.5*tilesz,
-          canvas.width - (tilesz),
-          6.5 * tilesz);
-    replayOffset = 3;
-  }
+
+  context.fRect(0.5 * tilesz,
+        canvas.height / 2.25 - 2 * tilesz,
+        canvas.width - (tilesz),
+        5 * tilesz);
+
   context.font = '' + tilesz + 'px Arial';
   setColor('black');
   context.textAlign = 'center';
     context.fillText(message1,
             canvas.width / 2,
-            canvas.height / 2.5);
-    context.fillText(message2,
-            canvas.width / 2,
-            canvas.height / 2.5 + tilesz);
-  context.fillText('(click anywhere',
+            canvas.height / 2.25);
+  context.fillText('--tap to continue--',
             canvas.width/2,
-            canvas.height / 2.5 + replayOffset * tilesz);
-  context.fillText('to play again)',
-            canvas.width/2,
-            canvas.height / 2.5 + (replayOffset + 1) * tilesz );
+            canvas.height / 2.25 + 2 * tilesz);
 
-  gdone = true;
+  gameState = GAMEOVER;
+}
+
+function drawContinueOptions() {
+  var pad = tilesz *.5;
+  setColor('black');
+  context.fRect(0,
+          TOPSPACE * tilesz,
+          canvas.width,
+          canvas.height-TOPSPACE * tilesz);
+
+  context.globalAlpha = 1.0;
+  setColor(menuColor);
+  context.fRect(0 + pad,
+          TOPSPACE * tilesz + pad,
+          canvas.width - 2*pad,
+          (canvas.height-TOPSPACE * tilesz) * 0.5 - 2*pad );
+  context.fRect(0 + pad,
+          (canvas.height+TOPSPACE * tilesz) * 0.5 + pad ,
+          canvas.width -2*pad,
+          (canvas.height-TOPSPACE * tilesz) * 0.5  - 2*pad);
+
+  context.font = '' + tilesz + 'px Arial';
+  setColor('black');
+  context.textAlign = 'center';
+  context.fillText('Play Missions',
+            canvas.width / 2,
+            (TOPSPACE + 2) * tilesz + pad);
+
+  context.fillText('Play Endless',
+            canvas.width/2,
+            (canvas.height+TOPSPACE * tilesz) * 0.5 + pad + 2*tilesz);
+
 }
 
 // --------------------------------------------------
@@ -191,6 +210,11 @@ function toggleMissionMode() {
 
 // eventually there should be some menu to choose to play missions
 // or not, maybe game state should encapsulate all of this
+//
+var gameState;
+var INPLAY      = 0;
+var GAMEOVER    = 1;
+var CHOOSEMODE  = 2;
 
 // --------------------------------------------------
 // For Scoring
@@ -536,7 +560,8 @@ Piece.prototype.down = function () {
 
   if (this._collides(0, 1, this.pattern)) {
     this.lock();
-    if(!gdone) {
+    //if(!gdone) {
+    if(gameState == INPLAY) {
       piece = nextPiece();
     }
     return 1;
@@ -728,7 +753,7 @@ function handleTouchMove(evt) {
   if (!xDown || !yDown) {
     return;
   }
-  if (gdone) {
+  if (gameState != INPLAY) {
     return;
   }
 
@@ -765,14 +790,28 @@ document.addEventListener('click', handleClick, false);
 
 function handleClick(evt) {
   var x = evt.clientX;
+  var y = evt.clientY;
 
-  if (gdone) {
-    reset();
+  //if (gdone) {
+  if (gameState == GAMEOVER) {
+    drawContinueOptions();
+    gameState = CHOOSEMODE;
   }
-  if (x < wWidth / 2) {
-    piece.rotate(3);
-  } else {
-    piece.rotate(1);
+  else if (gameState == CHOOSEMODE) {
+    if ( y < wHeight / 2) {
+      gameMode = MS; 
+    }
+    else {
+      gameMode = CH; 
+    }
+    reset();
+  } 
+  else if (gameState == INPLAY) {
+    if (x < wWidth / 2) {
+      piece.rotate(3);
+    } else {
+      piece.rotate(1);
+    }
   }
 };
 
@@ -806,7 +845,8 @@ function key(k) {
     reset();
   }
 
-  if (gdone) {
+  //if (gdone) {
+  if (gameState != INPLAY) {
     return;
   }
 
@@ -893,7 +933,8 @@ function initSideBoard() {
 }
 
 function main() {
-  if (!gdone) {
+  //if (!gdone) {
+  if (gameState == INPLAY) {
     var now = Date.now();
     var delta = now - dropStart;
     if (piece === null) {
@@ -926,15 +967,19 @@ function initGame() {
   isPieceHeld = 0;
   done = false;
   gdone = false;
+  gameState = INPLAY;
+  //drawContinueOptions();
+  //gameState = CHOOSEMODE;
   dropStart = Date.now();
   piece = null;
 }
 
-function playCH() {
-  gameMode = CH;
+function play() {
   initGame();
   drawBoard();
   main();
+  drawContinueOptions();
+  gameState = CHOOSEMODE;
 }
 
 function playMS() {

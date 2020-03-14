@@ -18,13 +18,12 @@
       </h2>
       10 Wide:
       <ul>
-         <li><a href="everythingBagel.html">10 Wide Full</a></li>
-         <li><a href="allclear.html">10 Wide Opener</a></li>
+         <li><a href="everythingBagel.html" target="_blank">10 Wide Full (opens in new tab)</a></li>
+         <li><a href="allclear.html" target="_blank">10 Wide Opener (opens in new tab)</a></li>
       </ul>
-      Combo 4 Wide:
+      4 Wide:
       <ul>
-         <li><a href="comboHunterMissions.html">ComboHunter Missions</a></li>
-         <li><a href="comboHunter.html">ComboHunter Freeplay</a></li>
+         <li><a href="comboHunter.html" target="_blank">ComboHunter (opens in new tab)</a></li>
       </ul>
       <h2>
       About
@@ -33,14 +32,14 @@
       This is a repository for a growing collection of javascript games centered on laying digital bricks.</p>
 
       <p>
-      There are currently 4 different modes of play and these can be generally classified into 2 different categories: 10 wide and combo 4 wide.
-      All four share the property that new bricks are determined and the user needs to place them onto the playing field. 
+      There are currently 3 different modes of play and these can be generally classified into 2 different categories: 10 wide and combo 4 wide.
+      All three share the property that new bricks are determined and the user needs to place them onto the playing field. 
       While they make their decision, the brick falls from the top of the board to the bottom, stopping on any previous played bricks that prevent it from falling further.
       When a row in the playing field is completely full of bricks, then that row of bricks is removed and any bricks locked into place above this row are shifted down one row.
       </p>
 
       <p>
-      Currently all four modes support the choice of how to define randomness in how the next pieces are chosen.
+      Currently all modes support the choice of how to define randomness in how the next pieces are chosen.
       </p>
 
       <h3>
@@ -64,15 +63,15 @@
       In game recognition of t spins are not currently implemented.
       </p>
       <h3>
-      Combo 4 Wide
+      4 Wide
       </h3>
       <p>
-      In combo 4 wide the goal is comboing. 
+      In 4 wide the playing field has width 4 and the only mode is ComboHunter, where the goal is to combo.
       A combo is a performing a line clear immediately after a line clear.
       Successively clearing lines, brick after brick, will increase the length of your combo.
       </p>
       <p>
-      Currently these are seperated into 2 versions.
+      ComboHunter itself has two ways to play: endless and missions.
       In both, when a combo ends the game ends. 
       This means a player should be very mindful of when they perform their first line clear, as that marks the beginning of a possible combo.
       </p>
@@ -84,9 +83,5 @@
       Currently these are only optional challenges.
       </p>
 
-      <p>
-      Eventually it is planned for these two versions to be implemented into a single interface where users are able to switch back and forth between free play and missions.
-      </p>
-    <script src="homeMenu.js"></script>
 	</body>
 </html>
