@@ -147,7 +147,7 @@ function gameOver(result) {
             canvas.width / 2,
             canvas.height / 2.25 - 1 * tilesz);
   context.textAlign = 'left';
-  if (gameMode === CH) {
+  if (gameMode === EL) {
     context.fillText('Combo: ' + combo,
             1 * tilesz,
             canvas.height / 2.25 + 1 * tilesz);
@@ -221,7 +221,7 @@ function isAllClear() {
 }
 
 
-function drawContinueOptions() {
+function drawMainMenu() {
   var pad = tilesz *.5;
   setColor('black');
   context.fRect(0,
@@ -255,10 +255,10 @@ function drawContinueOptions() {
 
 // --------------------------------------------------
 // For Game Modes
-var CH = 1 // main combo hunter
+var EL = 1 // play endless 
 var MS = 2 // play missions
 
-var gameMode = CH;
+var gameMode = EL;
 
 // --------------------------------------------------
 // For Mission Mode
@@ -269,7 +269,7 @@ function toggleMissionMode() {
   if (gameMode !== MS) {
     gameMode = MS;
   } else {
-    gameMode = CH;
+    gameMode = EL;
   }
 }
 
@@ -277,9 +277,9 @@ function toggleMissionMode() {
 // or not, maybe game state should encapsulate all of this
 //
 var gameState;
-var INPLAY      = 0;
-var GAMEOVER    = 1;
-var CHOOSEMODE  = 2;
+var INPLAY    = 0;
+var GAMEOVER  = 1;
+var MAINMENU  = 2;
 
 // --------------------------------------------------
 // For Scoring
@@ -302,7 +302,7 @@ function drawScoreBar() {
   setColor('black');
   context.textAlign = 'center';
   context.font = '' + tilesz + 'px Arial';
-  if (gameMode === CH) {
+  if (gameMode === EL) {
     context.fillText('Combo: ' + combo + ' Best: ' + bcombo,
             canvas.width/2,
             TOPSPACE * tilesz / 1.5);
@@ -317,7 +317,7 @@ function drawScoreBar() {
 // --------------------------------------------------
 // For Piece Preview
 function updatePreview() {
-  if (gameMode === CH) {
+  if (gameMode === EL) {
     if (bag.length < PREVIEW) {
       makeAndShuffleBag();
     }
@@ -863,15 +863,15 @@ function handleClick(evt) {
 
   //if (gdone) {
   if (gameState == GAMEOVER) {
-    drawContinueOptions();
-    gameState = CHOOSEMODE;
+    drawMainMenu();
+    gameState = MAINMENU;
   }
-  else if (gameState == CHOOSEMODE) {
+  else if (gameState == MAINMENU) {
     if ( y < wHeight / 2) {
       gameMode = MS; 
     }
     else {
-      gameMode = CH; 
+      gameMode = EL; 
     }
     reset();
   } 
@@ -1027,7 +1027,7 @@ function initGame() {
   initScores();
   initBoard();
   initSideBoard();
-  if (gameMode === CH) {
+  if (gameMode === EL) {
     initRandomizer();
   } else {
     bag = missions[currentMission][0].slice().reverse();
@@ -1037,8 +1037,8 @@ function initGame() {
   done = false;
   gdone = false;
   gameState = INPLAY;
-  //drawContinueOptions();
-  //gameState = CHOOSEMODE;
+  //drawMainMenu();
+  //gameState = MAINMENU;
   dropStart = Date.now();
   piece = null;
 }
@@ -1047,8 +1047,8 @@ function play() {
   initGame();
   drawBoard();
   main();
-  drawContinueOptions();
-  gameState = CHOOSEMODE;
+  drawMainMenu();
+  gameState = MAINMENU;
 }
 
 function playMS() {
