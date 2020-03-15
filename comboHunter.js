@@ -114,20 +114,16 @@ function reset() {
 }
 
 function gameOver(result) {
-  var message1 = '';
-  var message2 = '';
+  var message = '';
+  var rank = '';
   var replayOffset = 2;
 
   if (result === WIN) {
-    message1 = 'YOU WON'
-    if(gameMode === MS) { 
-      currentMission += 1;
-      currentMission %= missions.length;
-    }
+    message = 'YOU WON'
   } else if (result === LOSE) {
-    message1 = 'GAME OVER';
+    message = 'GAME OVER';
   } else if (result === BADWIN) {
-    message1 = 'TRY AGAIN';
+    message = 'TRY AGAIN';
   }
   context.globalAlpha = 0.4;
   setColor('black');
@@ -135,26 +131,95 @@ function gameOver(result) {
           TOPSPACE * tilesz,
           canvas.width,
           canvas.height-TOPSPACE * tilesz);
-  setColor(menuColor);
+  
+  setColor(cloud);
   context.globalAlpha = 1;
 
   context.fRect(0.5 * tilesz,
-        canvas.height / 2.25 - 2 * tilesz,
+        canvas.height / 2.25 - 3 * tilesz,
         canvas.width - (tilesz),
-        5 * tilesz);
+        9 * tilesz);
 
   context.font = '' + tilesz + 'px Arial';
   setColor('black');
   context.textAlign = 'center';
-    context.fillText(message1,
+  context.fillText(message,
             canvas.width / 2,
-            canvas.height / 2.25);
-  context.fillText('--tap to continue--',
-            canvas.width/2,
+            canvas.height / 2.25 - 1 * tilesz);
+  context.textAlign = 'left';
+  if (gameMode === CH) {
+    context.fillText('Combo: ' + combo,
+            1 * tilesz,
+            canvas.height / 2.25 + 1 * tilesz);
+    context.fillText('Pieces: '+ numpieces,
+            1 * tilesz,
+            canvas.height / 2.25 + 3 * tilesz);
+    context.fillText('Score: '+ Math.floor(((combo / numpieces) * 1000.)),
+            1 * tilesz,
+            canvas.height / 2.25 + 5 * tilesz);
+  } else if (gameMode === MS) {
+    context.fillText('Combo: ' + combo,
+            1 * tilesz,
             canvas.height / 2.25 + 2 * tilesz);
+    rank = calculateRank(result);
+    context.fillText('Rank: '+ rank,
+            1 * tilesz,
+            canvas.height / 2.25 + 4 * tilesz);
+  }
 
+  if(result === WIN && gameMode === MS) { 
+      currentMission += 1;
+      currentMission %= missions.length;
+    }
   gameState = GAMEOVER;
 }
+
+// In missions mode, every attempt gets a grade
+function calculateRank(result) {
+  var rank;
+  var gotMaxCombo = false;
+  var gotAllClear = false;
+
+  if (result === LOSE) {
+    rank = ' ';
+  } else if (result === BADWIN) {
+    rank = 'D';
+  } else if (result === WIN) {
+    rank = 'C';
+    if (combo === missions[currentMission][1][0]) {
+      gotMaxCombo = true;
+    }
+    if (!missions[currentMission][1][1]) {
+      if (gotMaxCombo) {
+        rank = 'A';
+      } else {
+        rank = 'B';
+      }
+    } else {
+      gotAllClear = isAllClear();
+      if (gotAllClear && gotMaxCombo) {
+        rank = 'A';
+      } else if (gotAllClear || gotMaxCombo) {
+        rank = 'B';
+      }
+    }
+  }
+  
+  return rank;
+}
+
+//check if the current board is empty
+//due to game rules, if bottom row empty, the whole thing is empty
+function isAllClear() {
+  var cleared = true;
+  for (let c = 0; c < BOARDWIDTH; c++) {
+      if (board[BOARDHEIGHT-1][c][1] != -1) {
+        cleared = false;
+      }
+  }
+  return cleared;
+}
+
 
 function drawContinueOptions() {
   var pad = tilesz *.5;
@@ -221,8 +286,11 @@ var CHOOSEMODE  = 2;
 var combo = 0;
 var bcombo = 0;
 
+var numpieces = 0;
+
 function initScores() {
   combo = 0;
+  numpieces = 0;
 }
 
 function drawScoreBar() {
@@ -356,23 +424,24 @@ function newPieceDet(blockNumber) {
 }
 
 function nextPiece() {
-
-    if (bag.length > 0) {
-      return newPieceDet(bag.pop());
-    } else if (isPieceHeld) {
-      isPieceHeld = 0;
-      drawHold();
-      return newPieceDet(heldPieceNumber);
-    } else {
-      if (gameMode === MS) {
-        drawScoreBar();
-        if (combo > 0) {
-          gameOver(WIN);
-        } else {
-          gameOver(BADWIN);
-        }
+  //numpieces++;//might be wrong here, testing
+  if (bag.length > 0) {
+    numpieces++;//might be wrong here, testing
+    return newPieceDet(bag.pop());
+  } else if (isPieceHeld) {
+    isPieceHeld = 0;
+    drawHold();
+    return newPieceDet(heldPieceNumber);
+  } else {
+    if (gameMode === MS) {
+      drawScoreBar();
+      if (combo > 0) {
+        gameOver(WIN);
+      } else {
+        gameOver(BADWIN);
       }
     }
+  }
 
 }
 var possibleRandomizer = document.getElementsByName('randomizer');
@@ -961,7 +1030,7 @@ function initGame() {
   if (gameMode === CH) {
     initRandomizer();
   } else {
-    bag = missions[currentMission].slice().reverse();
+    bag = missions[currentMission][0].slice().reverse();
     //bag = missions[1].reverse();
   }
   isPieceHeld = 0;
