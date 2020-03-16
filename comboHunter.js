@@ -103,9 +103,10 @@ var isPieceHeld;
 // --------------------------------------------------
 // For Starting and Ending of Games
 document.getElementById('newGame').onclick = reset;
-var WIN     = 1;
-var LOSE    = 0;
-var BADWIN  = -1
+var WIN       = 1;
+var LOSE      = 0;
+var BADWIN    = -1
+var recentWin = false;
 
 function reset() {
   initGame();
@@ -117,6 +118,7 @@ function gameOver(result) {
   var message = '';
   var rank = '';
   var replayOffset = 2;
+  gameState = GAMEOVER;
 
   if (result === WIN) {
     message = 'YOU WON'
@@ -125,54 +127,148 @@ function gameOver(result) {
   } else if (result === BADWIN) {
     message = 'TRY AGAIN';
   }
-  context.globalAlpha = 0.4;
+  context.globalAlpha = 0.6;
   setColor('black');
   context.fRect(0,
-          TOPSPACE * tilesz,
-          canvas.width,
-          canvas.height-TOPSPACE * tilesz);
+        TOPSPACE * tilesz,
+        canvas.width,
+        canvas.height-TOPSPACE * tilesz);
   
   setColor(cloud);
   context.globalAlpha = 1;
 
   context.fRect(0.5 * tilesz,
-        canvas.height / 2.25 - 3 * tilesz,
+        (TOPSPACE + 0.5) * tilesz,
         canvas.width - (tilesz),
-        9 * tilesz);
+        7 * tilesz);
 
   context.font = '' + tilesz + 'px Arial';
   setColor('black');
   context.textAlign = 'center';
   context.fillText(message,
-            canvas.width / 2,
-            canvas.height / 2.25 - 1 * tilesz);
+        canvas.width / 2,
+        (TOPSPACE + 2) * tilesz);
   context.textAlign = 'left';
   if (gameMode === EL) {
     context.fillText('Combo: ' + combo,
-            1 * tilesz,
-            canvas.height / 2.25 + 1 * tilesz);
+        1 * tilesz,
+        (TOPSPACE + 3.5) * tilesz);
     context.fillText('Pieces: '+ numpieces,
-            1 * tilesz,
-            canvas.height / 2.25 + 3 * tilesz);
+        1 * tilesz,
+        (TOPSPACE + 5) * tilesz);
     context.fillText('Score: '+ Math.floor(((combo / numpieces) * 1000.)),
-            1 * tilesz,
-            canvas.height / 2.25 + 5 * tilesz);
+        1 * tilesz,
+        (TOPSPACE + 6.5) * tilesz);
   } else if (gameMode === MS) {
     context.fillText('Combo: ' + combo,
-            1 * tilesz,
-            canvas.height / 2.25 + 2 * tilesz);
+        1 * tilesz,
+        (TOPSPACE + 4) * tilesz);
     rank = calculateRank(result);
     context.fillText('Rank: '+ rank,
-            1 * tilesz,
-            canvas.height / 2.25 + 4 * tilesz);
+        1 * tilesz,
+        (TOPSPACE + 6) * tilesz);
   }
 
   if(result === WIN && gameMode === MS) { 
-      currentMission += 1;
-      currentMission %= missions.length;
+      // moving this functionality to happen when user initiates it
+      //currentMission += 1;
+      //currentMission %= missions.length;
     }
-  gameState = GAMEOVER;
+
+  drawContinueOptions(result);
 }
+
+// On the game over summary screen there are buttons
+// to play again or go to main menu
+// Mission mode should also have a play next mission option
+//
+// My knowledge of making 'buttons' is poor
+// I think I'm going to need to hardcode button positions
+// into where button presses get recorded
+function drawContinueOptions(result) {
+  var halfline = 0.5 * tilesz;
+  var buttonWidth = 2.5 * tilesz;
+  var button1Start  = (TOPSPACE + 8) * tilesz;
+  var button2Start  = button1Start + buttonWidth + halfline;
+  var button3Start  = button2Start + buttonWidth + halfline;
+
+  var button1text = "Play Again";
+  if (gameMode === MS) {
+    button1text = "Replay Mission";
+  }
+  // button2text is overwritten if in MS mode
+  var button2text = "Main Menu";
+  var button3text = "Main Menu";
+
+  //first button
+  setColor(kiwi);
+  context.globalAlpha = 1;
+  context.fRect(0.5 * tilesz,
+      button1Start,
+      canvas.width - (tilesz),
+      buttonWidth);
+
+  context.font = '' + tilesz + 'px Arial';
+  setColor('black');
+  context.textAlign = 'center';
+  context.fillText(button1text,
+      canvas.width / 2,
+      button1Start + 3*halfline);
+
+  if (gameMode === EL) {
+    //second button
+    setColor(dragon);
+    context.fRect(0.5 * tilesz,
+        button2Start,
+        canvas.width - (tilesz),
+        buttonWidth);
+
+    context.font = '' + tilesz + 'px Arial';
+    setColor('black');
+    context.fillText(button2text,
+        canvas.width / 2,
+        button2Start + 3*halfline);
+  } else if (gameMode === MS) {
+    //second button
+    setColor(peach);
+    button2text = 'Play Next Mission';
+    context.fRect(0.5 * tilesz,
+        button2Start,
+        canvas.width - (tilesz),
+        buttonWidth);
+
+    context.font = '' + tilesz + 'px Arial';
+    setColor('black');
+    context.fillText(button2text,
+        canvas.width / 2,
+        button2Start + 3*halfline);
+
+    if (result !== WIN) {
+      
+      context.globalAlpha = 0.4;
+      setColor('black');
+      context.fRect(0.5 * tilesz,
+        button2Start,
+        canvas.width - (tilesz),
+        buttonWidth);
+      context.globalAlpha = 1;
+    }
+    //third button
+    setColor(dragon);
+    context.fRect(0.5 * tilesz,
+        button3Start,
+        canvas.width - (tilesz),
+        buttonWidth);
+
+    context.font = '' + tilesz + 'px Arial';
+    setColor('black');
+    context.fillText(button3text,
+        canvas.width / 2,
+        button3Start + 3*halfline);
+  }
+}
+
+
 
 // In missions mode, every attempt gets a grade
 function calculateRank(result) {
@@ -243,11 +339,11 @@ function drawMainMenu() {
   context.font = '' + tilesz + 'px Arial';
   setColor('black');
   context.textAlign = 'center';
-  context.fillText('Play Missions',
+  context.fillText('Play Endless',
             canvas.width / 2,
             (TOPSPACE + 2) * tilesz + pad);
 
-  context.fillText('Play Endless',
+  context.fillText('Play Missions',
             canvas.width/2,
             (canvas.height+TOPSPACE * tilesz) * 0.5 + pad + 2*tilesz);
 
@@ -436,8 +532,10 @@ function nextPiece() {
     if (gameMode === MS) {
       drawScoreBar();
       if (combo > 0) {
+        recentWin = true;
         gameOver(WIN);
       } else {
+        recentWin = false;
         gameOver(BADWIN);
       }
     }
@@ -671,6 +769,7 @@ Piece.prototype.lock = function () {
 
       if (this.y + iy < 0) {
         // Game ends!
+        recentWin = false;
         gameOver(LOSE);
         return;
       }
@@ -711,6 +810,7 @@ Piece.prototype.lock = function () {
     drawBoard();
   } else { // no lines were cleared
     if (combo > 0) { // but we were in the middle of combo
+      recentWin = false;
       gameOver(LOSE);
     }
   }
@@ -862,16 +962,56 @@ function handleClick(evt) {
   var y = evt.clientY;
 
   //if (gdone) {
-  if (gameState == GAMEOVER) {
-    drawMainMenu();
-    gameState = MAINMENU;
+  if (gameState === GAMEOVER) {
+    //need to check which game mode it is in, as that determines
+    //button layout on the game over screen
+    // I should not be defining these twice and in this fashion
+    // I need to better figure out how to share this information
+    var buttonWidth = 2.5 * tilesz;
+    var halfline = 0.5 * tilesz;
+    var button1Start  = (TOPSPACE + 8) * tilesz;
+    var button2Start  = button1Start + buttonWidth + halfline;
+    var button3Start  = button2Start + buttonWidth + halfline;
+
+    if (gameMode === EL) {
+      //2 buttons
+      //top is play again
+      //bottom is main menu
+      if ( y > button1Start && y < button1Start + buttonWidth) {
+        reset();
+      } else if (y > button2Start && y < button2Start + buttonWidth) {
+        drawMainMenu();
+        gameState = MAINMENU;
+      }
+
+    } else if (gameMode === MS) {
+      //3 buttons
+      //top is repeat mission
+      //mid is next mission, only live if recent win
+      //bottom is main menu
+      if ( y > button1Start && y < button1Start + buttonWidth) {
+        reset();
+      } else if (y > button2Start && y < button2Start + buttonWidth) {
+        if (recentWin) {
+          currentMission += 1;
+          currentMission %= missions.length;
+          reset();
+        }
+      } else if (y > button3Start && y < button3Start + buttonWidth) {
+        drawMainMenu();
+        gameState = MAINMENU;
+      }
+    }
+    //reset();
+    //drawMainMenu();
+    //gameState = MAINMENU;
   }
   else if (gameState == MAINMENU) {
     if ( y < wHeight / 2) {
-      gameMode = MS; 
+      gameMode = EL; 
     }
     else {
-      gameMode = EL; 
+      gameMode = MS; 
     }
     reset();
   } 
@@ -1036,6 +1176,7 @@ function initGame() {
   isPieceHeld = 0;
   done = false;
   gdone = false;
+  recentWin = false;
   gameState = INPLAY;
   //drawMainMenu();
   //gameState = MAINMENU;
