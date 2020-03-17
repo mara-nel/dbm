@@ -57,6 +57,9 @@ var wWidth;
 var thinLine;
 var thickLine;
 
+var SMALLBUTTON = 2.5;
+var BIGBUTTON   = 4;
+
 context.lineWidth = 1;
 context.sRect = function (x, y, w, h, l) {
   l = parseInt(l);
@@ -108,6 +111,12 @@ var LOSE      = 0;
 var BADWIN    = -1
 var recentWin = false;
 
+var gameScreen;
+var INPLAY    = 0;
+var GAMEOVER  = 1;
+var MAINMENU  = 2;
+var SETTINGS  = 3;
+
 function reset() {
   initGame();
   drawBoard();
@@ -118,7 +127,7 @@ function gameOver(result) {
   var message = '';
   var rank = '';
   var replayOffset = 2;
-  gameState = GAMEOVER;
+  gameScreen = GAMEOVER;
 
   if (result === WIN) {
     message = 'YOU WON'
@@ -186,88 +195,66 @@ function gameOver(result) {
 // I think I'm going to need to hardcode button positions
 // into where button presses get recorded
 function drawContinueOptions(result) {
-  var halfline = 0.5 * tilesz;
-  var buttonWidth = 2.5 * tilesz;
+  var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+
   var button1Start  = (TOPSPACE + 8) * tilesz;
-  var button2Start  = button1Start + buttonWidth + halfline;
-  var button3Start  = button2Start + buttonWidth + halfline;
+  var button2Start  = button1Start + buttonSpacing;
+  var button3Start  = button2Start + buttonSpacing;
+;
+  var button2color = dragon;
 
   var button1text = "Play Again";
-  if (gameMode === MS) {
-    button1text = "Replay Mission";
-  }
-  // button2text is overwritten if in MS mode
   var button2text = "Main Menu";
   var button3text = "Main Menu";
+  if (gameMode === MS) {
+    button1text = "Replay Mission";
+    button2text = 'Play Next Mission';
+    button2color = peach;
+  }
 
   //first button
-  setColor(kiwi);
-  context.globalAlpha = 1;
-  context.fRect(0.5 * tilesz,
-      button1Start,
-      canvas.width - (tilesz),
-      buttonWidth);
+  drawButton(button1Start, SMALLBUTTON, kiwi, button1text);
+  //second button
+  drawButton(button2Start, SMALLBUTTON, button2color, button2text);
 
-  context.font = '' + tilesz + 'px Arial';
-  setColor('black');
-  context.textAlign = 'center';
-  context.fillText(button1text,
-      canvas.width / 2,
-      button1Start + 3*halfline);
-
-  if (gameMode === EL) {
-    //second button
-    setColor(dragon);
-    context.fRect(0.5 * tilesz,
-        button2Start,
-        canvas.width - (tilesz),
-        buttonWidth);
-
-    context.font = '' + tilesz + 'px Arial';
-    setColor('black');
-    context.fillText(button2text,
-        canvas.width / 2,
-        button2Start + 3*halfline);
-  } else if (gameMode === MS) {
-    //second button
-    setColor(peach);
-    button2text = 'Play Next Mission';
-    context.fRect(0.5 * tilesz,
-        button2Start,
-        canvas.width - (tilesz),
-        buttonWidth);
-
-    context.font = '' + tilesz + 'px Arial';
-    setColor('black');
-    context.fillText(button2text,
-        canvas.width / 2,
-        button2Start + 3*halfline);
+  if (gameMode === MS) {
+    //third button
+    drawButton(button3Start, SMALLBUTTON, dragon, button3text);
 
     if (result !== WIN) {
-      
+      //shade out second button  
       context.globalAlpha = 0.4;
       setColor('black');
       context.fRect(0.5 * tilesz,
         button2Start,
         canvas.width - (tilesz),
-        buttonWidth);
+        SMALLBUTTON * tilesz);
       context.globalAlpha = 1;
     }
-    //third button
-    setColor(dragon);
-    context.fRect(0.5 * tilesz,
-        button3Start,
-        canvas.width - (tilesz),
-        buttonWidth);
-
-    context.font = '' + tilesz + 'px Arial';
-    setColor('black');
-    context.fillText(button3text,
-        canvas.width / 2,
-        button3Start + 3*halfline);
   }
 }
 
+// this draws a rectangle with text
+function drawButton(  x,
+                      size,
+                      color,
+                      text) {
+
+  setColor(color);
+  context.globalAlpha = 1;
+  context.fRect(0.5 * tilesz,
+      x,
+      canvas.width - (tilesz),
+      size * tilesz);
+
+  context.font = '' + tilesz + 'px Arial';
+  setColor('black');
+  context.textAlign = 'center';
+  context.fillText(text,
+      canvas.width / 2,
+      x + 1.5*tilesz);
+}
+                      
 
 
 // In missions mode, every attempt gets a grade
@@ -317,6 +304,65 @@ function isAllClear() {
 }
 
 
+function drawSettings() {
+
+  var textHeight = 1.5 * tilesz;
+  var textOffset = 0;
+  var startY = (TOPSPACE + 0.5) * tilesz;
+  var randomizerText = ['Randomizer:',
+                        '1 Bag',
+                        '2 Bag',
+                        '7 Bag',
+                        'Random'];
+  var themeText = [ 'Theme:',
+                    'Tropical',
+                    'Trans Flag'];
+
+  setColor('black');
+  context.fRect(0,
+          TOPSPACE * tilesz,
+          canvas.width,
+          canvas.height-TOPSPACE * tilesz);
+
+  setColor(cloud);
+  context.fRect(0.5 * tilesz,
+        startY,
+        canvas.width - (tilesz),
+        (randomizerText.length + themeText.length) * textHeight + tilesz);
+  context.font = '' + tilesz + 'px Arial';
+  setColor('black');
+
+  startY += textHeight;
+  context.textAlign = 'left';
+  for (let i = 0; i < randomizerText.length; i++) {
+    if (i === 0) {
+      textOffset = 1 * tilesz;
+    } else {
+      textOffset = 2.5 * tilesz;
+    }
+    context.fillText(randomizerText[i],
+        textOffset,
+        startY + textHeight * (i));
+  }
+  startY += textHeight * (randomizerText.length);
+  for (let i = 0; i < themeText.length; i++) {
+    if (i === 0) {
+      textOffset = 1 * tilesz;
+    } else {
+      textOffset = 2.5 * tilesz;
+    }
+    context.fillText(themeText[i],
+        textOffset,
+        startY + textHeight * (i));
+  }
+
+  startY += textHeight * themeText.length;
+  drawButton(startY, SMALLBUTTON, dragon, "Main Menu");
+
+}
+
+
+
 function drawMainMenu() {
   var pad = tilesz *.5;
   setColor('black');
@@ -325,28 +371,30 @@ function drawMainMenu() {
           canvas.width,
           canvas.height-TOPSPACE * tilesz);
 
+  var buttonSpacing = (BIGBUTTON + 0.5) * tilesz;
+  var ELButtonY     = TOPSPACE * tilesz + pad;
+  var MSButtonY     = ELButtonY + buttonSpacing;
+  var DGButtonY     = MSButtonY + buttonSpacing; 
+  var SettButtonY   = DGButtonY + buttonSpacing;
+
   context.globalAlpha = 1.0;
-  setColor(menuColor);
-  context.fRect(0 + pad,
-          TOPSPACE * tilesz + pad,
-          canvas.width - 2*pad,
-          (canvas.height-TOPSPACE * tilesz) * 0.5 - 2*pad );
-  context.fRect(0 + pad,
-          (canvas.height+TOPSPACE * tilesz) * 0.5 + pad ,
-          canvas.width -2*pad,
-          (canvas.height-TOPSPACE * tilesz) * 0.5  - 2*pad);
+  drawButton(ELButtonY,BIGBUTTON, sky, 'Play Endless');
+  drawButton(MSButtonY,BIGBUTTON, kiwi, 'Play Missions');
+  drawButton(DGButtonY,BIGBUTTON, peach, 'Play Dig');
+  drawButton(SettButtonY,SMALLBUTTON, cloud, 'Settings');
 
-  context.font = '' + tilesz + 'px Arial';
+  //shade out things that haven't been developed yet  
+  context.globalAlpha = 0.4;
   setColor('black');
-  context.textAlign = 'center';
-  context.fillText('Play Endless',
-            canvas.width / 2,
-            (TOPSPACE + 2) * tilesz + pad);
-
-  context.fillText('Play Missions',
-            canvas.width/2,
-            (canvas.height+TOPSPACE * tilesz) * 0.5 + pad + 2*tilesz);
-
+  context.fRect(0.5 * tilesz,
+      DGButtonY,
+      canvas.width - (tilesz),
+      BIGBUTTON * tilesz);
+  context.fRect(0.5 * tilesz,
+      SettButtonY,
+      canvas.width - (tilesz),
+      SMALLBUTTON * tilesz);
+  context.globalAlpha = 1;
 }
 
 // --------------------------------------------------
@@ -368,14 +416,6 @@ function toggleMissionMode() {
     gameMode = EL;
   }
 }
-
-// eventually there should be some menu to choose to play missions
-// or not, maybe game state should encapsulate all of this
-//
-var gameState;
-var INPLAY    = 0;
-var GAMEOVER  = 1;
-var MAINMENU  = 2;
 
 // --------------------------------------------------
 // For Scoring
@@ -728,7 +768,7 @@ Piece.prototype.down = function () {
   if (this._collides(0, 1, this.pattern)) {
     this.lock();
     //if(!gdone) {
-    if(gameState == INPLAY) {
+    if(gameScreen == INPLAY) {
       piece = nextPiece();
     }
     return 1;
@@ -922,7 +962,7 @@ function handleTouchMove(evt) {
   if (!xDown || !yDown) {
     return;
   }
-  if (gameState != INPLAY) {
+  if (gameScreen != INPLAY) {
     return;
   }
 
@@ -962,60 +1002,13 @@ function handleClick(evt) {
   var y = evt.clientY;
 
   //if (gdone) {
-  if (gameState === GAMEOVER) {
-    //need to check which game mode it is in, as that determines
-    //button layout on the game over screen
-    // I should not be defining these twice and in this fashion
-    // I need to better figure out how to share this information
-    var buttonWidth = 2.5 * tilesz;
-    var halfline = 0.5 * tilesz;
-    var button1Start  = (TOPSPACE + 8) * tilesz;
-    var button2Start  = button1Start + buttonWidth + halfline;
-    var button3Start  = button2Start + buttonWidth + halfline;
-
-    if (gameMode === EL) {
-      //2 buttons
-      //top is play again
-      //bottom is main menu
-      if ( y > button1Start && y < button1Start + buttonWidth) {
-        reset();
-      } else if (y > button2Start && y < button2Start + buttonWidth) {
-        drawMainMenu();
-        gameState = MAINMENU;
-      }
-
-    } else if (gameMode === MS) {
-      //3 buttons
-      //top is repeat mission
-      //mid is next mission, only live if recent win
-      //bottom is main menu
-      if ( y > button1Start && y < button1Start + buttonWidth) {
-        reset();
-      } else if (y > button2Start && y < button2Start + buttonWidth) {
-        if (recentWin) {
-          currentMission += 1;
-          currentMission %= missions.length;
-          reset();
-        }
-      } else if (y > button3Start && y < button3Start + buttonWidth) {
-        drawMainMenu();
-        gameState = MAINMENU;
-      }
-    }
-    //reset();
-    //drawMainMenu();
-    //gameState = MAINMENU;
+  if (gameScreen === GAMEOVER) {
+    interpretGameOverTap(y);
   }
-  else if (gameState == MAINMENU) {
-    if ( y < wHeight / 2) {
-      gameMode = EL; 
-    }
-    else {
-      gameMode = MS; 
-    }
-    reset();
+  else if (gameScreen == MAINMENU) {
+    interpretMainMenuTap(y);
   } 
-  else if (gameState == INPLAY) {
+  else if (gameScreen == INPLAY) {
     if (x < wWidth / 2) {
       piece.rotate(3);
     } else {
@@ -1023,6 +1016,73 @@ function handleClick(evt) {
     }
   }
 };
+
+
+// the logic of taps / clicks performed on Main Menu screen
+function interpretMainMenuTap(y) {
+  var buttonSpacing = (BIGBUTTON + 0.5) * tilesz;
+  var ELButtonY     = (TOPSPACE + 0.5) * tilesz ;
+  var MSButtonY     = ELButtonY + buttonSpacing;
+  var DGButtonY     = MSButtonY + buttonSpacing; 
+  var SettButtonY   = DGButtonY + buttonSpacing;
+
+  if ( y > ELButtonY && y < ELButtonY + BIGBUTTON*tilesz) {
+    gameMode = EL; 
+    reset();
+  } else if (y > MSButtonY && y < MSButtonY + BIGBUTTON*tilesz) {
+    gameMode = MS; 
+    reset();
+  } else if (y > DGButtonY && y < DGButtonY + BIGBUTTON*tilesz) {
+    pass;
+  } else if (y > SettButtonY && y < SettButtonY + SMALLBUTTON*tilesz) {
+    gameScreen = SETTINGS;
+    drawSettings();
+  }
+}
+
+// the logic of taps / clicks performed on Game Over screen
+function interpretGameOverTap(y) {
+    //need to check which game mode it is in, as that determines
+    //button layout on the game over screen
+    // I should not be defining these twice and in this fashion
+    // I need to better figure out how to share this information
+    var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+
+    var button1Y  = (TOPSPACE + 8) * tilesz;
+    var button2Y  = button1Y + buttonSpacing;
+    var button3Y  = button2Y + buttonSpacing;
+  
+    if (gameMode === EL) {
+      //2 buttons
+      //top is play again
+      //bottom is main menu
+      if ( y > button1Y && y < button1Y + SMALLBUTTON*tilesz) {
+        reset();
+      } else if (y > button2Y && y < button2Y + SMALLBUTTON*tilesz) {
+        drawMainMenu();
+        gameScreen = MAINMENU;
+      }
+
+    } else if (gameMode === MS) {
+      //3 buttons
+      //top is repeat mission
+      //mid is next mission, only live if recent win
+      //bottom is main menu
+      if ( y > button1Y && y < button1Y + SMALLBUTTON*tilesz) {
+        reset();
+      } else if (y > button2Y && y < button2Y + SMALLBUTTON*tilesz) {
+        if (recentWin) {
+          currentMission += 1;
+          currentMission %= missions.length;
+          reset();
+        }
+      } else if (y > button3Y && y < button3Y + SMALLBUTTON*tilesz) {
+        drawMainMenu();
+        gameScreen = MAINMENU;
+      }
+    }
+}
+
 
 // --------------------------------------------------
 function key(k) {
@@ -1055,7 +1115,7 @@ function key(k) {
   }
 
   //if (gdone) {
-  if (gameState != INPLAY) {
+  if (gameScreen != INPLAY) {
     return;
   }
 
@@ -1143,7 +1203,7 @@ function initSideBoard() {
 
 function main() {
   //if (!gdone) {
-  if (gameState == INPLAY) {
+  if (gameScreen == INPLAY) {
     var now = Date.now();
     var delta = now - dropStart;
     if (piece === null) {
@@ -1177,9 +1237,9 @@ function initGame() {
   done = false;
   gdone = false;
   recentWin = false;
-  gameState = INPLAY;
+  gameScreen = INPLAY;
   //drawMainMenu();
-  //gameState = MAINMENU;
+  //gameScreen = MAINMENU;
   dropStart = Date.now();
   piece = null;
 }
@@ -1189,12 +1249,6 @@ function play() {
   drawBoard();
   main();
   drawMainMenu();
-  gameState = MAINMENU;
+  gameScreen = MAINMENU;
 }
 
-function playMS() {
-  gameMode = MS;
-  initGame();
-  drawBoard();
-  main();
-}
