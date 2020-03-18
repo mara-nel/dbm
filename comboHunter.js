@@ -37,7 +37,6 @@ var dropStart;
 
 var board = [];
 var bag = [];
-var bagText = document.getElementById('bagsize');
 
 // --------------------------------------------------
 // For sizing and graphics
@@ -50,7 +49,7 @@ var BOARDHEIGHT = 16;
 var LEFTSPACE = 1;
 var RIGHTSPACE = 5;
 var TOPSPACE = 2;
-var BOARDPERCENT = 0.75;
+var BOARDPERCENT = 0.8;
 var PREVIEW = 4;
 var BOTTOMSPACE = 1;
 var sideBarX;
@@ -109,7 +108,6 @@ var isPieceHeld;
 
 // --------------------------------------------------
 // For Starting and Ending of Games
-document.getElementById('newGame').onclick = reset;
 var WIN       = 1;
 var LOSE      = 0;
 var BADWIN    = -1
@@ -400,16 +398,18 @@ function drawMainMenu() {
   drawButton(SettButtonY,SMALLBUTTON, cloud, 'Settings');
 
   //shade out things that haven't been developed yet  
+  //shade out dig
   context.globalAlpha = 0.4;
   setColor('black');
   context.fRect(0.5 * tilesz,
       DGButtonY,
       canvas.width - (tilesz),
       BIGBUTTON * tilesz);
-  context.fRect(0.5 * tilesz,
-      SettButtonY,
-      canvas.width - (tilesz),
-      SMALLBUTTON * tilesz);
+  //shade out settings
+  //context.fRect(0.5 * tilesz,
+   //   SettButtonY,
+    //  canvas.width - (tilesz),
+     // SMALLBUTTON * tilesz);
   context.globalAlpha = 1.0;
 }
 
@@ -598,18 +598,11 @@ function nextPiece() {
   }
 
 }
-var possibleRandomizer = document.getElementsByName('randomizer');
 bagSize = 1;
 function initRandomizer() {
   bag = [];
-  //for (let i = 0; i < possibleRandomizer.length; i++) {
-  //  if (possibleRandomizer[i].checked) {
-  //    bagSize = possibleRandomizer[i].value;
-  //  }
-  //}
 
   makeAndShuffleBag();
-  bagText.textContent = 'Current Bag Size: ' + bagSize;
 }
 
 function initBoard() {
@@ -1061,7 +1054,9 @@ function interpretSettingsTap(y) {
   // each subsequent line is another textHeight away
   var themeTextY = randomizerTextY + randomizerText.length * textHeight;
   // each subsequent line is another textHeight away
-  var MMButtonY = themeTextY + themeText.length * textHeight;
+
+  // I don't know where that extra .25 comes from?
+  var MMButtonY = themeTextY + themeText.length * textHeight + .25 * textHeight;
 
   var bagSizeMap = [1,2,7,0];
 
