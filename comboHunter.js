@@ -12,6 +12,10 @@ cloud   = '#CCCCFF';
 
 menuColor = '#CCCCFF';
 
+var theme;
+var TROPICAL = 0;
+var TRANS = 1;
+
 // --------------------------------------------------
 var pieces = [
   [I, sky],
@@ -314,9 +318,10 @@ function drawSettings() {
                         '2 Bag',
                         '7 Bag',
                         'Random'];
+
   var themeText = [ 'Theme:',
-                    'Tropical',
-                    'Trans Flag'];
+                    'Tropical'];
+                   // 'Trans Flag'];
 
   setColor('black');
   context.fRect(0,
@@ -359,6 +364,17 @@ function drawSettings() {
   startY += textHeight * themeText.length;
   drawButton(startY, SMALLBUTTON, dragon, "Main Menu");
 
+  // highlight current settings
+  // hardcoding in 1 bag and tropical
+  startY = (TOPSPACE + 0.5) * tilesz;
+  //very hacky
+  var bagSizeMap = [4,1,2,0,0,0,0,3];
+  drawRectangle(startY + bagSizeMap[bagSize]*textHeight + 0.4 *textHeight );
+  var themeMap = [6,7];
+  drawRectangle(startY + themeMap[theme]*textHeight + 0.4*textHeight );
+
+
+
 }
 
 
@@ -394,7 +410,7 @@ function drawMainMenu() {
       SettButtonY,
       canvas.width - (tilesz),
       SMALLBUTTON * tilesz);
-  context.globalAlpha = 1;
+  context.globalAlpha = 1.0;
 }
 
 // --------------------------------------------------
@@ -583,14 +599,14 @@ function nextPiece() {
 
 }
 var possibleRandomizer = document.getElementsByName('randomizer');
-bagSize = 0;
+bagSize = 1;
 function initRandomizer() {
   bag = [];
-  for (let i = 0; i < possibleRandomizer.length; i++) {
-    if (possibleRandomizer[i].checked) {
-      bagSize = possibleRandomizer[i].value;
-    }
-  }
+  //for (let i = 0; i < possibleRandomizer.length; i++) {
+  //  if (possibleRandomizer[i].checked) {
+  //    bagSize = possibleRandomizer[i].value;
+  //  }
+  //}
 
   makeAndShuffleBag();
   bagText.textContent = 'Current Bag Size: ' + bagSize;
@@ -1008,6 +1024,9 @@ function handleClick(evt) {
   else if (gameScreen == MAINMENU) {
     interpretMainMenuTap(y);
   } 
+  else if (gameScreen == SETTINGS) {
+    interpretSettingsTap(y);
+  } 
   else if (gameScreen == INPLAY) {
     if (x < wWidth / 2) {
       piece.rotate(3);
@@ -1016,6 +1035,75 @@ function handleClick(evt) {
     }
   }
 };
+
+
+// the logic of taps / clicks performed on Settings screen
+function interpretSettingsTap(y) {
+  // this is going to be tough
+  // layout of settings page is going to essentially be 
+  // rewritten here.
+  // Changing layout of settings page will require redoing
+  // this whole function
+  var textHeight = 1.5 * tilesz;
+  // textOffset is 1*tilesz on header, 2.5*tilesz on item
+  var textOffset = 0;
+  var startY = (TOPSPACE + 0.5) * tilesz;
+  var randomizerText = ['Randomizer:',
+                        '1 Bag',
+                        '2 Bag',
+                        '7 Bag',
+                        'Random'];
+  var themeText = [ 'Theme:',
+                    'Tropical'];
+                   // 'Trans Flag'];
+
+  var randomizerTextY = startY + textHeight;
+  // each subsequent line is another textHeight away
+  var themeTextY = randomizerTextY + randomizerText.length * textHeight;
+  // each subsequent line is another textHeight away
+  var MMButtonY = themeTextY + themeText.length * textHeight;
+
+  var bagSizeMap = [1,2,7,0];
+
+
+  // need a draw selected settings function
+  // need to interpret when a click is clicking a setting option
+  //  and redraw settings to reflect selection
+  //  also change the settings themselves
+  // Start with bag size: will change bagSize and call initRandomizer()
+  // initRandomizer() will need to be updated
+  var tempY;
+
+  if (y > MMButtonY && y < MMButtonY + SMALLBUTTON*tilesz) {
+        drawMainMenu();
+        gameScreen = MAINMENU;
+  } else if ( y > randomizerTextY + .5*textHeight && y < randomizerTextY + 4.5*textHeight) {
+
+    tempY = Math.floor((y - (randomizerTextY + .5*textHeight)) / (textHeight));
+
+    //drawRectangle(randomizerTextY + (tempY * textHeight)  + (0.6 * tilesz));
+
+    bagSize = bagSizeMap[tempY];
+    initRandomizer();
+    drawSettings();
+  } else {
+   // drawSettings();
+   // drawRectangle(y);
+    pass;
+  } 
+}
+
+function drawRectangle(y) {
+
+    context.globalAlpha = 1.0;
+    context.beginPath();
+    context.lineWidth = "2";
+    context.strokeStyle = 'black';
+    context.rect(tilesz, y, 
+      canvas.width - 2*tilesz, 1.25* tilesz);
+    context.stroke();
+}
+
 
 
 // the logic of taps / clicks performed on Main Menu screen
@@ -1242,6 +1330,7 @@ function initGame() {
   //gameScreen = MAINMENU;
   dropStart = Date.now();
   piece = null;
+  theme = TROPICAL;
 }
 
 function play() {
