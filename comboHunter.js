@@ -10,11 +10,36 @@ blueb   = '#6633FF';
 peach   = '#FF9933';
 cloud   = '#CCCCFF';
 
-menuColor = '#CCCCFF';
+
+// 400 pink = '#EC407A';
+pink = '#F06292';
+blue = '#42A5F5';
+cyan = '#26C6DA';
+gree = '#66BB6A';
+lime = '#D4E157';
+ambe = '#FFCA28';
+deor = '#FF7043';
+
+teal = '#E0F2F1';
+
+topBarColor = teal;
+resultsColor = teal;
+continueColor = cyan;
+replayColor = lime;
+returnColor = blue;
+
+endlessColor = cyan;
+missionsColor = ambe;
+digColor = deor;
+settingsColor = pink;
+
+
+
 
 var theme;
 var TROPICAL = 0;
 var TRANS = 1;
+
 
 // --------------------------------------------------
 var pieces = [
@@ -27,6 +52,16 @@ var pieces = [
   [Z, dragon]
 ];
 
+
+var pieces = [
+  [I, cyan],
+  [J, blue],
+  [L, deor],
+  [O, lime],
+  [S, gree],
+  [T, ambe],
+  [Z, pink]
+];
 var done;
 var gdone;
 
@@ -99,6 +134,66 @@ function setColor(color) {
 }
 clear = 'black';
 
+
+
+/**
+ * From stackoverflow:
+ * Draws a rounded rectangle using the current state of the canvas.
+ * If you omit the last three params, it will draw a rectangle
+ * outline with a 5 pixel border radius
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Number} x The top left x coordinate
+ * @param {Number} y The top left y coordinate
+ * @param {Number} width The width of the rectangle
+ * @param {Number} height The height of the rectangle
+ * @param {Number} [radius = 5] The corner radius; It can also be an object 
+ *                 to specify different radii for corners
+ * @param {Number} [radius.tl = 0] Top left
+ * @param {Number} [radius.tr = 0] Top right
+ * @param {Number} [radius.br = 0] Bottom right
+ * @param {Number} [radius.bl = 0] Bottom left
+ * @param {Boolean} [fill = false] Whether to fill the rectangle.
+ * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
+ */
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  if (typeof stroke === 'undefined') {
+    stroke = true;
+  }
+  if (typeof radius === 'undefined') {
+    radius = 5;
+  }
+  if (typeof radius === 'number') {
+    radius = {tl: radius, tr: radius, br: radius, bl: radius};
+  } else {
+    var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
+    for (var side in defaultRadius) {
+      radius[side] = radius[side] || defaultRadius[side];
+    }
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + radius.tl, y);
+  ctx.lineTo(x + width - radius.tr, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+  ctx.lineTo(x + width, y + height - radius.br);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+  ctx.lineTo(x + radius.bl, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+  ctx.lineTo(x, y + radius.tl);
+  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+  ctx.closePath();
+  if (fill) {
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.stroke();
+  }
+
+}
+
+
+
+
+
 // --------------------------------------------------
 // For Piece Hold
 var heldPiece;
@@ -145,7 +240,7 @@ function gameOver(result) {
         canvas.width,
         canvas.height-TOPSPACE * tilesz);
   
-  setColor(cloud);
+  setColor(resultsColor);
   context.globalAlpha = 1;
 
   context.fRect(0.5 * tilesz,
@@ -199,36 +294,43 @@ function gameOver(result) {
 function drawContinueOptions(result) {
   var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
 
-  var button1Start  = (TOPSPACE + 8) * tilesz;
-  var button2Start  = button1Start + buttonSpacing;
-  var button3Start  = button2Start + buttonSpacing;
+  var continueStart = (TOPSPACE + 8) * tilesz;
+  var replayStart   = continueStart + buttonSpacing;
+  var returnStart   = replayStart + buttonSpacing;
 ;
-  var button2color = dragon;
 
-  var button1text = "Play Again";
-  var button2text = "Main Menu";
-  var button3text = "Main Menu";
+  var continueText = "Play Again";
+  var replayText = "Replay Mission";
+  var returnText = "Main Menu";
   if (gameMode === MS) {
-    button1text = "Replay Mission";
-    button2text = 'Play Next Mission';
-    button2color = peach;
+    continueText = "Play Next Mission";
   }
 
-  //first button
-  drawButton(button1Start, SMALLBUTTON, kiwi, button1text);
-  //second button
-  drawButton(button2Start, SMALLBUTTON, button2color, button2text);
+  //continue button
+  drawButton(continueStart, 
+             SMALLBUTTON,
+             continueColor, 
+             continueText);
+
+  //return button
+  drawOutlinedButton(returnStart, 
+             SMALLBUTTON,
+             returnColor, 
+             returnText);
 
   if (gameMode === MS) {
-    //third button
-    drawButton(button3Start, SMALLBUTTON, dragon, button3text);
+  //replay button
+  drawButton(replayStart, 
+             SMALLBUTTON, 
+             replayColor,
+             replayText);
 
     if (result !== WIN) {
-      //shade out second button  
+      //shade out continue button  
       context.globalAlpha = 0.4;
       setColor('black');
       context.fRect(0.5 * tilesz,
-        button2Start,
+        continueStart,
         canvas.width - (tilesz),
         SMALLBUTTON * tilesz);
       context.globalAlpha = 1;
@@ -244,19 +346,80 @@ function drawButton(  x,
 
   setColor(color);
   context.globalAlpha = 1;
-  context.fRect(0.5 * tilesz,
-      x,
-      canvas.width - (tilesz),
-      size * tilesz);
+  //context.fRect(0.5 * tilesz,
+  //    x,
+  //    canvas.width - (tilesz),
+  //    size * tilesz);
+  roundRect(context,
+            0.5 * tilesz,
+            x,
+            canvas.width - tilesz,
+            size * tilesz,
+            tilesz / 3,
+            true);
 
   context.font = '' + tilesz + 'px Arial';
   setColor('black');
   context.textAlign = 'center';
-  context.fillText(text,
+  if (size === BIGBUTTON) {
+    context.fillText(text,
+      canvas.width / 2,
+      x + 2.25*tilesz);
+  }
+  else {
+    context.fillText(text,
       canvas.width / 2,
       x + 1.5*tilesz);
+  }
 }
-                      
+
+// this draws a rectangle with text
+function drawOutlinedButton(  x,
+                      size,
+                      color,
+                      text) {
+  context.globalAlpha = .5;
+  setColor('black');
+  roundRect(context,
+            0.5 * tilesz,
+            x,
+            canvas.width - tilesz,
+            size * tilesz,
+            tilesz / 3,
+            true);
+
+  setColor(color);
+  context.globalAlpha = 1;
+  context.strokeStyle = color;
+  context.lineWidth = tilesz / 10;
+  roundRect(context,
+            0.5 * tilesz,
+            x,
+            canvas.width - tilesz,
+            size * tilesz,
+            tilesz / 3,
+            false,
+            true);
+
+  context.font = '' + tilesz + 'px Arial';
+  context.textAlign = 'center';
+  if (size === BIGBUTTON) {
+    context.fillText(text,
+      canvas.width / 2,
+      x + 2.25*tilesz);
+  }
+  else {
+    context.fillText(text,
+      canvas.width / 2,
+      x + 1.5*tilesz);
+  }
+  setColor('black');
+  context.strokeStyle = 'black';
+  context.lineWidth = "2";
+}
+
+
+
 
 
 // In missions mode, every attempt gets a grade
@@ -327,7 +490,7 @@ function drawSettings() {
           canvas.width,
           canvas.height-TOPSPACE * tilesz);
 
-  setColor(cloud);
+  setColor(teal);
   context.fRect(0.5 * tilesz,
         startY,
         canvas.width - (tilesz),
@@ -360,7 +523,7 @@ function drawSettings() {
   }
 
   startY += textHeight * themeText.length;
-  drawButton(startY, SMALLBUTTON, dragon, "Main Menu");
+  drawButton(startY, SMALLBUTTON, returnColor, "Return");
 
   // highlight current settings
   // hardcoding in 1 bag and tropical
@@ -392,10 +555,10 @@ function drawMainMenu() {
   var SettButtonY   = DGButtonY + buttonSpacing;
 
   context.globalAlpha = 1.0;
-  drawButton(ELButtonY,BIGBUTTON, sky, 'Play Endless');
-  drawButton(MSButtonY,BIGBUTTON, kiwi, 'Play Missions');
-  drawButton(DGButtonY,BIGBUTTON, peach, 'Play Dig');
-  drawButton(SettButtonY,SMALLBUTTON, cloud, 'Settings');
+  drawButton(ELButtonY,BIGBUTTON, endlessColor, 'Play Endless');
+  drawButton(MSButtonY,BIGBUTTON, missionsColor, 'Play Missions');
+  drawButton(DGButtonY,BIGBUTTON, digColor, 'Play Dig');
+  drawOutlinedButton(SettButtonY,SMALLBUTTON, settingsColor, 'Settings');
 
   //shade out things that haven't been developed yet  
   //shade out dig
@@ -446,7 +609,7 @@ function initScores() {
 }
 
 function drawScoreBar() {
-  setColor(menuColor);
+  setColor(topBarColor);
   context.fRect(0, 0,
     canvas.width,
     TOPSPACE*tilesz-1);
@@ -567,7 +730,7 @@ function newPieceDet(blockNumber) {
   var p = pieces[blockNumber];
   currentPieceNumber = blockNumber;
   updatePreview();
-  menuColor = p[1];
+  topBarColor = p[1];
   
   //Drawing these things here so that they have the color of the current piece
   drawBorders();
@@ -674,6 +837,12 @@ function drawHold() {
 function drawSquare(x, y) {
   context.fRect(x * tilesz, y * tilesz, tilesz, tilesz);
 }
+
+
+
+
+
+
 
 // --------------------------------------------------
 // Defining the Piece object
@@ -1131,35 +1300,30 @@ function interpretGameOverTap(y) {
     // I need to better figure out how to share this information
     var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
 
-    var button1Y  = (TOPSPACE + 8) * tilesz;
-    var button2Y  = button1Y + buttonSpacing;
-    var button3Y  = button2Y + buttonSpacing;
+    // button layout is continue / replay / main menu
+    // in the endless mode there is no replay button but the space is still there
+    var continueY  = (TOPSPACE + 8) * tilesz;
+    var replayY  = continueY + buttonSpacing;
+    var returnY  = replayY + buttonSpacing;
   
     if (gameMode === EL) {
-      //2 buttons
-      //top is play again
-      //bottom is main menu
-      if ( y > button1Y && y < button1Y + SMALLBUTTON*tilesz) {
+      if ( y > continueY && y < continueY + SMALLBUTTON*tilesz) {
         reset();
-      } else if (y > button2Y && y < button2Y + SMALLBUTTON*tilesz) {
+      } else if (y > returnY && y < returnY + SMALLBUTTON*tilesz) {
         drawMainMenu();
         gameScreen = MAINMENU;
       }
 
     } else if (gameMode === MS) {
-      //3 buttons
-      //top is repeat mission
-      //mid is next mission, only live if recent win
-      //bottom is main menu
-      if ( y > button1Y && y < button1Y + SMALLBUTTON*tilesz) {
-        reset();
-      } else if (y > button2Y && y < button2Y + SMALLBUTTON*tilesz) {
+      if (y > continueY && y < continueY + SMALLBUTTON*tilesz) {
         if (recentWin) {
           currentMission += 1;
           currentMission %= missions.length;
           reset();
         }
-      } else if (y > button3Y && y < button3Y + SMALLBUTTON*tilesz) {
+      } else if ( y > replayY && y < replayY + SMALLBUTTON*tilesz) {
+        reset();
+      }  else if (y > returnY && y < returnY + SMALLBUTTON*tilesz) {
         drawMainMenu();
         gameScreen = MAINMENU;
       }
@@ -1197,6 +1361,7 @@ function key(k) {
     reset();
   }
 
+  
   //if (gdone) {
   if (gameScreen != INPLAY) {
     return;
@@ -1250,7 +1415,7 @@ function drawBoard() {
 }
 
 function drawBorders() {
-  context.fillStyle = menuColor;
+  context.fillStyle = topBarColor;
   context.fRect((sideBarX + 0.5) * tilesz,
     (TOPSPACE + BOARDHEIGHT - 3.5) * tilesz,
     (RIGHTSPACE - 1) * tilesz,
