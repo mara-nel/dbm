@@ -2,8 +2,41 @@ var WALL = 1;
 var BLOCK = 2;
 var SILVER = 7;
 var GOLD = 8;
+// --------------------------------------------------
+// colors 
+pink = '#F06292';
+blue = '#42A5F5';
+cyan = '#26C6DA';
+gree = '#66BB6A';
+lime = '#D4E157';
+ambe = '#FFCA28';
+deor = '#FF7043';
 
-menuColor = '#CCCCFF';
+teal = '#E0F2F1';
+
+//topBarColor = teal;
+//resultsColor = teal;
+//continueColor = cyan;
+//replayColor = lime;
+//returnColor = blue;
+
+//endlessColor = cyan;
+//missionsColor = ambe;
+//digColor = deor;
+//settingsColor = pink;
+
+menuColor = teal;
+
+var pieces = [
+  [I, cyan],
+  [J, blue],
+  [L, deor],
+  [O, lime],
+  [S, gree],
+  [T, ambe],
+  [Z, pink]
+];
+/*old
 var pieces = [
   [I, 'cyan'],
   [J, 'purple'],
@@ -13,6 +46,7 @@ var pieces = [
   [T, 'yellow'],
   [Z, 'red']
 ];
+*/
 
 var done;
 var gdone;
