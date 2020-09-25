@@ -1,5 +1,10 @@
 var WALL = 1;
 var BLOCK = 2;
+
+/* global button list */
+
+var buttons = [];
+
 // --------------------------------------------------
 // colors 
 banana  = '#FFFF33';
@@ -27,6 +32,7 @@ resultsColor = teal;
 continueColor = cyan;
 replayColor = lime;
 returnColor = blue;
+mainmenuColor = blue;
 
 endlessColor = cyan;
 missionsColor = ambe;
@@ -42,6 +48,7 @@ var TRANS = 1;
 
 
 // --------------------------------------------------
+/* old colors
 var pieces = [
   [I, sky],
   [J, blueb],
@@ -51,6 +58,7 @@ var pieces = [
   [T, banana],
   [Z, dragon]
 ];
+*/
 
 
 var pieces = [
@@ -287,55 +295,75 @@ function gameOver(result) {
 // On the game over summary screen there are buttons
 // to play again or go to main menu
 // Mission mode should also have a play next mission option
-//
-// My knowledge of making 'buttons' is poor
-// I think I'm going to need to hardcode button positions
-// into where button presses get recorded
+
 function drawContinueOptions(result) {
   var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
 
   var continueStart = (TOPSPACE + 8) * tilesz;
   var replayStart   = continueStart + buttonSpacing;
-  var returnStart   = replayStart + buttonSpacing;
-;
+  var mainmenuStart   = replayStart + buttonSpacing;
 
   var continueText = "Play Again";
   var replayText = "Replay Mission";
-  var returnText = "Main Menu";
+  var mainmenuText = "Main Menu";
   if (gameMode === MS) {
     continueText = "Play Next Mission";
   }
 
   //continue button
-  drawButton(continueStart, 
-             SMALLBUTTON,
-             continueColor, 
-             continueText);
-
-  //return button
-  drawOutlinedButton(returnStart, 
-             SMALLBUTTON,
-             returnColor, 
-             returnText);
-
-  if (gameMode === MS) {
-  //replay button
-  drawButton(replayStart, 
-             SMALLBUTTON, 
-             replayColor,
-             replayText);
-
-    if (result !== WIN) {
-      //shade out continue button  
-      context.globalAlpha = 0.4;
-      setColor('black');
-      context.fRect(0.5 * tilesz,
-        continueStart,
-        canvas.width - (tilesz),
-        SMALLBUTTON * tilesz);
-      context.globalAlpha = 1;
-    }
+  if ( gameMode === EL || result === WIN ) {
+  buttons.push(new Button(0,
+    continueStart,
+    100,
+    SMALLBUTTON,
+    continueText,
+    continueColor,
+    function() {
+      continuePlaying();
+    },
+    false));
+  } else {
+    // draw 'fake' button with no functionality
+    drawButton(continueStart, 
+      SMALLBUTTON,
+      continueColor, 
+      continueText);
+    //shade out continue button  
+    context.globalAlpha = 0.4;
+    setColor('black');
+    context.fRect(0.5 * tilesz,
+      continueStart,
+      canvas.width - (tilesz),
+      SMALLBUTTON * tilesz);
+    context.globalAlpha = 1;
   }
+
+  //replay button
+  if (gameMode === MS) {
+    buttons.push(new Button(0,
+      replayStart,
+      100,
+      SMALLBUTTON,
+      replayText,
+      replayColor,
+      function() {
+        replayMission();
+      },
+      false));
+  }
+
+  //main menu button
+  buttons.push(new Button(0,
+    mainmenuStart,
+    100,
+    SMALLBUTTON,
+    mainmenuText,
+    mainmenuColor,
+    function() {
+      gotoMainMenu();
+    },
+    true));
+
 }
 
 // this draws a rectangle with text
@@ -538,7 +566,59 @@ function drawSettings() {
 
 }
 
+function clearButtons() {
+  console.log('Number of buttons: '+ buttons.length);
+  buttons = [];
+  
+}
 
+function startEndless() {
+  gameMode = EL; 
+  reset();
+}
+
+
+function startMissions() {
+  gameMode = MS; 
+  reset();
+}
+
+function replayMission() {
+  reset();
+}
+
+function continuePlaying() {
+  if ( gameMode === EL ) {
+    reset();
+  } else if ( gameMode === MS ) {
+    currentMission += 1;
+    currentMission %= missions.length;
+    reset();
+  }
+
+}
+
+function playAgain() {
+  reset();
+}
+
+function nextMission() {
+  if (recentWin) {
+    currentMission += 1;
+    currentMission %= missions.length;
+    reset();
+  }
+}
+
+function gotoSettings() {
+  gameScreen = SETTINGS;
+  drawSettings();
+}
+
+function gotoMainMenu() {
+  gameScreen = MAINMENU;
+  drawMainMenu();
+}
 
 function drawMainMenu() {
   var pad = tilesz *.5;
@@ -555,25 +635,59 @@ function drawMainMenu() {
   var SettButtonY   = DGButtonY + buttonSpacing;
 
   context.globalAlpha = 1.0;
-  drawButton(ELButtonY,BIGBUTTON, endlessColor, 'Play Endless');
-  drawButton(MSButtonY,BIGBUTTON, missionsColor, 'Play Missions');
-  drawButton(DGButtonY,BIGBUTTON, digColor, 'Play Dig');
-  drawOutlinedButton(SettButtonY,SMALLBUTTON, settingsColor, 'Settings');
+
+// test area --------------
+
+  // play endless button
+  buttons.push(new Button(0,
+    ELButtonY,
+    100,
+    BIGBUTTON,
+    'Play Endless',
+    endlessColor,
+    function() {
+      startEndless();
+    },
+    false));
+
+  // play missions button
+  buttons.push(new Button(0,
+    MSButtonY, 
+    100,
+    BIGBUTTON,
+    'Play Missions',
+    missionsColor, 
+    function() {
+      startMissions();
+    },
+    false));
+
+  // go to settings button
+  buttons.push(new Button(0,
+    SettButtonY, 
+    100,
+    SMALLBUTTON,
+    'Settings',
+    settingsColor, 
+    function() {
+      gotoSettings();
+    },
+    true));
+
+
+  //drawButton(DGButtonY,BIGBUTTON, digColor, 'Play Dig');
 
   //shade out things that haven't been developed yet  
   //shade out dig
+  /*
   context.globalAlpha = 0.4;
   setColor('black');
   context.fRect(0.5 * tilesz,
       DGButtonY,
       canvas.width - (tilesz),
       BIGBUTTON * tilesz);
-  //shade out settings
-  //context.fRect(0.5 * tilesz,
-   //   SettButtonY,
-    //  canvas.width - (tilesz),
-     // SMALLBUTTON * tilesz);
   context.globalAlpha = 1.0;
+  */
 }
 
 // --------------------------------------------------
@@ -842,6 +956,43 @@ function drawSquare(x, y) {
 
 
 
+// --------------------------------------------------
+// Defining the Button prototype
+
+var Button = function(x, y, width, height, text, color, fn, outlined) {
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
+  this.text = text;
+  this.color = color;
+  //this.img = new Image();
+  //this.img.src = imgurl;
+  this.fn = fn; //pass the button's click function
+
+  if ( outlined ) {
+    drawOutlinedButton(this.y, height, this.color, this.text);
+  } else {
+    drawButton(this.y, height, this.color, this.text);
+  }
+//  this.draw();
+};
+
+Button.prototype.draw = function() {
+  drawButton(y, BIGBUTTON, color, text);
+};
+
+Button.prototype.mouse_down = function(mouseX, mouseY) {
+//y > ELButtonY && y < ELButtonY + BIGBUTTON*tilesz
+//  var hit = ( mouseX > canvas.width / 2 ) ? true : false;
+  var hit = ( mouseY > this.y && mouseY < this.y + this.height*tilesz ) ? true : false;
+  if (hit == true) {
+    console.log(this.text + ' button pressed');
+    clearButtons();
+    this.fn(); //run the button's function
+  }
+  return hit;
+};
 
 
 // --------------------------------------------------
@@ -862,14 +1013,6 @@ function Piece(patterns, color, shapeNumber) {
 
 Piece.prototype.heldRecently = function () {
   this.recentlyHeld = 1;
-};
-
-Piece.prototype.notHeldRecently = function () { // might not need this
-  this.recentlyHeld = 0;
-};
-
-Piece.prototype.wasHeldRecenty = function () { // this does not seem to work properly
-  return this.recentlyHeld;
 };
 
 Piece.prototype.rotate = function (amount) {
@@ -1179,14 +1322,15 @@ function handleClick(evt) {
   var x = evt.clientX;
   var y = evt.clientY;
 
+  var button_was_clicked = buttons.some(function(b) {
+    return b.mouse_down(x, y);
+  });
+
+  if (button_was_clicked) return; //return early because button was clicked
+
   //if (gdone) {
-  if (gameScreen === GAMEOVER) {
-    interpretGameOverTap(y);
-  }
-  else if (gameScreen == MAINMENU) {
-    interpretMainMenuTap(y);
-  } 
-  else if (gameScreen == SETTINGS) {
+  
+  if (gameScreen == SETTINGS) {
     interpretSettingsTap(y);
   } 
   else if (gameScreen == INPLAY) {
@@ -1253,7 +1397,7 @@ function interpretSettingsTap(y) {
   } else {
    // drawSettings();
    // drawRectangle(y);
-    pass;
+    //pass;
   } 
 }
 
@@ -1266,68 +1410,6 @@ function drawRectangle(y) {
     context.rect(tilesz, y, 
       canvas.width - 2*tilesz, 1.25* tilesz);
     context.stroke();
-}
-
-
-
-// the logic of taps / clicks performed on Main Menu screen
-function interpretMainMenuTap(y) {
-  var buttonSpacing = (BIGBUTTON + 0.5) * tilesz;
-  var ELButtonY     = (TOPSPACE + 0.5) * tilesz ;
-  var MSButtonY     = ELButtonY + buttonSpacing;
-  var DGButtonY     = MSButtonY + buttonSpacing; 
-  var SettButtonY   = DGButtonY + buttonSpacing;
-
-  if ( y > ELButtonY && y < ELButtonY + BIGBUTTON*tilesz) {
-    gameMode = EL; 
-    reset();
-  } else if (y > MSButtonY && y < MSButtonY + BIGBUTTON*tilesz) {
-    gameMode = MS; 
-    reset();
-  } else if (y > DGButtonY && y < DGButtonY + BIGBUTTON*tilesz) {
-    pass;
-  } else if (y > SettButtonY && y < SettButtonY + SMALLBUTTON*tilesz) {
-    gameScreen = SETTINGS;
-    drawSettings();
-  }
-}
-
-// the logic of taps / clicks performed on Game Over screen
-function interpretGameOverTap(y) {
-    //need to check which game mode it is in, as that determines
-    //button layout on the game over screen
-    // I should not be defining these twice and in this fashion
-    // I need to better figure out how to share this information
-    var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
-
-    // button layout is continue / replay / main menu
-    // in the endless mode there is no replay button but the space is still there
-    var continueY  = (TOPSPACE + 8) * tilesz;
-    var replayY  = continueY + buttonSpacing;
-    var returnY  = replayY + buttonSpacing;
-  
-    if (gameMode === EL) {
-      if ( y > continueY && y < continueY + SMALLBUTTON*tilesz) {
-        reset();
-      } else if (y > returnY && y < returnY + SMALLBUTTON*tilesz) {
-        drawMainMenu();
-        gameScreen = MAINMENU;
-      }
-
-    } else if (gameMode === MS) {
-      if (y > continueY && y < continueY + SMALLBUTTON*tilesz) {
-        if (recentWin) {
-          currentMission += 1;
-          currentMission %= missions.length;
-          reset();
-        }
-      } else if ( y > replayY && y < replayY + SMALLBUTTON*tilesz) {
-        reset();
-      }  else if (y > returnY && y < returnY + SMALLBUTTON*tilesz) {
-        drawMainMenu();
-        gameScreen = MAINMENU;
-      }
-    }
 }
 
 
@@ -1486,8 +1568,8 @@ function initGame() {
   gdone = false;
   recentWin = false;
   gameScreen = INPLAY;
-  //drawMainMenu();
-  //gameScreen = MAINMENU;
+ // drawMainMenu();
+ // gameScreen = MAINMENU;
   dropStart = Date.now();
   piece = null;
   theme = TROPICAL;
