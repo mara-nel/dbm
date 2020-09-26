@@ -38,6 +38,7 @@ endlessColor = cyan;
 missionsColor = ambe;
 digColor = deor;
 settingsColor = pink;
+controlsColor = gree;
 
 
 
@@ -103,6 +104,9 @@ var wWidth;
 var thinLine;
 var thickLine;
 
+var fontSize;
+var fontSizeSmall;
+
 var SMALLBUTTON = 2.5;
 var BIGBUTTON   = 4;
 
@@ -124,6 +128,8 @@ function initCanvas() {
   wHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   wWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   tilesz = parseInt(wHeight * BOARDPERCENT / BOARDHEIGHT);
+  fontSize      = '' + tilesz + 'px Arial';
+  fontSizeSmall = '' + tilesz * .6 + 'px Arial';
   thinLine = 0.0125;
   thickLine = 0.25;
   boardX = LEFTSPACE + 1 * thickLine;
@@ -220,7 +226,8 @@ var gameScreen;
 var INPLAY    = 0;
 var GAMEOVER  = 1;
 var MAINMENU  = 2;
-var SETTINGS  = 3;
+var CONTROLS  = 3;
+var SETTINGS  = 4;
 
 function reset() {
   initGame();
@@ -256,7 +263,7 @@ function gameOver(result) {
         canvas.width - (tilesz),
         7 * tilesz);
 
-  context.font = '' + tilesz + 'px Arial';
+  context.font = fontSize;
   setColor('black');
   context.textAlign = 'center';
   context.fillText(message,
@@ -386,7 +393,7 @@ function drawButton(  x,
             tilesz / 3,
             true);
 
-  context.font = '' + tilesz + 'px Arial';
+  context.font = fontSize;
   setColor('black');
   context.textAlign = 'center';
   if (size === BIGBUTTON) {
@@ -429,7 +436,7 @@ function drawOutlinedButton(  x,
             false,
             true);
 
-  context.font = '' + tilesz + 'px Arial';
+  context.font = fontSize;
   context.textAlign = 'center';
   if (size === BIGBUTTON) {
     context.fillText(text,
@@ -497,7 +504,100 @@ function isAllClear() {
 }
 
 
+
+function drawControls() {
+
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+
+  var textHeight = 1 * tilesz;
+  var textOffset = 0;
+  var startY = (TOPSPACE + 0.5) * tilesz;
+  var actionText = ['Swipe Left:',
+                      'Swipe Right:',
+                      'Tap Left of Center:',
+                      'Tap Right of Center:'];
+  var responseText = ['slide left',
+                      'slide right',
+                      'rotate left',
+                      'rotate right'];
+  var advancedAText = [ 'Swipe Up:',
+                        'Swipe Down:'];
+  var advancedRText = [ 'store piece',
+                        'drop piece'];
+  // clear the board 
+  setColor('black');
+  context.fRect(0,
+          TOPSPACE * tilesz,
+          canvas.width,
+          canvas.height-TOPSPACE * tilesz);
+
+  // draw basic controls card
+  setColor(teal);
+  context.fRect(0.5 * tilesz,
+        startY,
+        canvas.width - (tilesz),
+        (actionText.length ) * textHeight + tilesz*.6);
+  context.font = fontSizeSmall;
+  setColor('black');
+
+  // write basic controls
+  startY += textHeight;
+  for (let i = 0; i < actionText.length; i++) {
+    textOffset = 1 * tilesz;
+    context.textAlign = 'left';
+    context.fillText(actionText[i],
+        textOffset,
+        startY + textHeight * (i));
+    context.textAlign = 'right';
+    context.fillText(responseText[i],
+        canvas.width - textOffset,
+        startY + textHeight * (i));
+  }
+
+  startY += (actionText.length ) * textHeight;// + tilesz*.6 ;
+  // draw advanced controls card
+  setColor(teal);
+  context.fRect(0.5 * tilesz,
+        startY,
+        canvas.width - (tilesz),
+        (advancedAText.length ) * textHeight + tilesz*.6);
+  context.font = fontSizeSmall;
+  setColor('black');
+
+  // write advanced controls
+  startY += textHeight;
+  for (let i = 0; i < advancedAText.length; i++) {
+    textOffset = 1 * tilesz;
+    context.textAlign = 'left';
+    context.fillText(advancedAText[i],
+        textOffset,
+        startY + textHeight * (i));
+    context.textAlign = 'right';
+    context.fillText(advancedRText[i],
+        canvas.width - textOffset,
+        startY + textHeight * (i));
+  }
+  startY = canvas.height - sButtonSpacing;
+
+  buttons.push(new Button(0,
+    startY,
+    100,
+    SMALLBUTTON,
+    "Main Menu",
+    mainmenuColor,
+    function() {
+      gotoMainMenu();
+    },
+    false));
+
+
+
+}
+
+
 function drawSettings() {
+
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
 
   var textHeight = 1.5 * tilesz;
   var textOffset = 0;
@@ -523,7 +623,7 @@ function drawSettings() {
         startY,
         canvas.width - (tilesz),
         (randomizerText.length + themeText.length) * textHeight + tilesz);
-  context.font = '' + tilesz + 'px Arial';
+  context.font = fontSize;
   setColor('black');
 
   startY += textHeight;
@@ -550,17 +650,26 @@ function drawSettings() {
         startY + textHeight * (i));
   }
 
-  startY += textHeight * themeText.length;
-  drawButton(startY, SMALLBUTTON, returnColor, "Return");
+  startY = canvas.height - sButtonSpacing;
+  buttons.push(new Button(0,
+    startY,
+    100,
+    SMALLBUTTON,
+    "Main Menu",
+    mainmenuColor,
+    function() {
+      gotoMainMenu();
+    },
+    false));
 
   // highlight current settings
   // hardcoding in 1 bag and tropical
   startY = (TOPSPACE + 0.5) * tilesz;
   //very hacky
   var bagSizeMap = [4,1,2,0,0,0,0,3];
-  drawRectangle(startY + bagSizeMap[bagSize]*textHeight + 0.4 *textHeight );
+  drawSettingsRectangle(startY + bagSizeMap[bagSize]*textHeight + 0.4 *textHeight );
   var themeMap = [6,7];
-  drawRectangle(startY + themeMap[theme]*textHeight + 0.4*textHeight );
+  drawSettingsRectangle(startY + themeMap[theme]*textHeight + 0.4*textHeight );
 
 
 
@@ -610,6 +719,11 @@ function nextMission() {
   }
 }
 
+function gotoControls() {
+  gameScreen = SETTINGS;
+  drawControls();
+}
+
 function gotoSettings() {
   gameScreen = SETTINGS;
   drawSettings();
@@ -628,11 +742,12 @@ function drawMainMenu() {
           canvas.width,
           canvas.height-TOPSPACE * tilesz);
 
-  var buttonSpacing = (BIGBUTTON + 0.5) * tilesz;
-  var ELButtonY     = TOPSPACE * tilesz + pad;
-  var MSButtonY     = ELButtonY + buttonSpacing;
-  var DGButtonY     = MSButtonY + buttonSpacing; 
-  var SettButtonY   = DGButtonY + buttonSpacing;
+  var bButtonSpacing = (BIGBUTTON + 0.5) * tilesz;
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var ELButtonY       = TOPSPACE * tilesz + pad;
+  var MSButtonY       = ELButtonY + bButtonSpacing;
+  var ControlButtonY  = MSButtonY + 2 * sButtonSpacing; 
+  var SettButtonY     = ControlButtonY + sButtonSpacing;
 
   context.globalAlpha = 1.0;
 
@@ -661,6 +776,18 @@ function drawMainMenu() {
       startMissions();
     },
     false));
+
+  //go to controls button
+  buttons.push(new Button(0,
+    ControlButtonY, 
+    100,
+    SMALLBUTTON,
+    'Controls',
+    controlsColor, 
+    function() {
+      gotoControls();
+    },
+    true));
 
   // go to settings button
   buttons.push(new Button(0,
@@ -727,10 +854,10 @@ function drawScoreBar() {
   context.fRect(0, 0,
     canvas.width,
     TOPSPACE*tilesz-1);
-  //ctx.font = '' + tilesz + 'px Arial';
+  //ctx.font = fontSize;
   setColor('black');
   context.textAlign = 'center';
-  context.font = '' + tilesz + 'px Arial';
+  context.font = fontSize;
   if (gameMode === EL) {
     context.fillText('Combo: ' + combo + ' Best: ' + bcombo,
             canvas.width/2,
@@ -1382,10 +1509,7 @@ function interpretSettingsTap(y) {
   // initRandomizer() will need to be updated
   var tempY;
 
-  if (y > MMButtonY && y < MMButtonY + SMALLBUTTON*tilesz) {
-        drawMainMenu();
-        gameScreen = MAINMENU;
-  } else if ( y > randomizerTextY + .5*textHeight && y < randomizerTextY + 4.5*textHeight) {
+  if ( y > randomizerTextY + .5*textHeight && y < randomizerTextY + 4.5*textHeight) {
 
     tempY = Math.floor((y - (randomizerTextY + .5*textHeight)) / (textHeight));
 
@@ -1401,14 +1525,22 @@ function interpretSettingsTap(y) {
   } 
 }
 
-function drawRectangle(y) {
+function drawSettingsRectangle(y) {
+    drawRectangle(tilesz,
+      y,
+      canvas.width - (2 * tilesz),
+      1.25 * tilesz,
+      'black');
+  }
+
+
+function drawRectangle(x,y,width,height,color) {
 
     context.globalAlpha = 1.0;
     context.beginPath();
     context.lineWidth = "2";
-    context.strokeStyle = 'black';
-    context.rect(tilesz, y, 
-      canvas.width - 2*tilesz, 1.25* tilesz);
+    context.strokeStyle = color;
+    context.rect(x, y, width, height); 
     context.stroke();
 }
 
