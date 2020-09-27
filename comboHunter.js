@@ -1,6 +1,8 @@
 var WALL = 1;
 var BLOCK = 2;
 
+var MOBILE = 0;
+var DESKTOP = 1;
 /* global button list */
 
 var buttons = [];
@@ -29,6 +31,7 @@ teal = '#E0F2F1';
 
 topBarColor = teal;
 resultsColor = teal;
+cardColor = teal;
 continueColor = cyan;
 replayColor = lime;
 returnColor = blue;
@@ -90,6 +93,8 @@ var clear = window.getComputedStyle(canvas).getPropertyValue('background-color')
 
 var BOARDWIDTH = 4;
 var BOARDHEIGHT = 16;
+var CBOARDWIDTH = 7;
+var CBOARDHEIGHT = 5;
 var LEFTSPACE = 1;
 var RIGHTSPACE = 5;
 var TOPSPACE = 2;
@@ -103,6 +108,10 @@ var wHeight;
 var wWidth;
 var thinLine;
 var thickLine;
+var wideButton;
+var wideButtonX;
+var halfButton;
+var halfButtonFarX;
 
 var fontSize;
 var fontSizeSmall;
@@ -136,15 +145,21 @@ function initCanvas() {
   sideBarX = LEFTSPACE + BOARDWIDTH + 2 * thickLine;
   canvas.width = (sideBarX + RIGHTSPACE) * tilesz;
   canvas.height = (TOPSPACE + BOARDHEIGHT + BOTTOMSPACE) * tilesz;
+  wideButton = canvas.width - tilesz;
+  wideButtonX = .5 * tilesz;
+  halfButton = (canvas.width - tilesz) / 2;
+  halfButtonFarX = canvas.width/2;
 }
 
 function setColor(color) {
   context.fillStyle = color;
+  /* not sure what this was for?
   if (color !== clear) {
     context.strokeStyle = 'black';
   } else {
     context.strokeStyle = 'dimGray';
-  }
+  } 
+  */
 }
 clear = 'black';
 
@@ -230,9 +245,18 @@ var CONTROLS  = 3;
 var SETTINGS  = 4;
 
 function reset() {
+  buttons = [];
   initGame();
   drawBoard();
   main();
+}
+
+function clearScreen() {
+  setColor('black');
+  context.fRect(0,
+          TOPSPACE * tilesz,
+          canvas.width,
+          canvas.height-TOPSPACE * tilesz);
 }
 
 function gameOver(result) {
@@ -249,11 +273,7 @@ function gameOver(result) {
     message = 'TRY AGAIN';
   }
   context.globalAlpha = 0.6;
-  setColor('black');
-  context.fRect(0,
-        TOPSPACE * tilesz,
-        canvas.width,
-        canvas.height-TOPSPACE * tilesz);
+  clearScreen();
   
   setColor(resultsColor);
   context.globalAlpha = 1;
@@ -319,22 +339,24 @@ function drawContinueOptions(result) {
 
   //continue button
   if ( gameMode === EL || result === WIN ) {
-  buttons.push(new Button(0,
+  buttons.push(new Button(wideButtonX,
     continueStart,
-    100,
+    wideButton,
     SMALLBUTTON,
     continueText,
     continueColor,
     function() {
       continuePlaying();
-    },
-    false));
+    }));
   } else {
     // draw 'fake' button with no functionality
-    drawButton(continueStart, 
+    drawButton(wideButtonX,continueStart,
+      wideButton,
       SMALLBUTTON,
       continueColor, 
-      continueText);
+      continueText,
+      true,
+      true);
     //shade out continue button  
     context.globalAlpha = 0.4;
     setColor('black');
@@ -347,113 +369,96 @@ function drawContinueOptions(result) {
 
   //replay button
   if (gameMode === MS) {
-    buttons.push(new Button(0,
+    buttons.push(new Button(wideButtonX,
       replayStart,
-      100,
+      wideButton,
       SMALLBUTTON,
       replayText,
       replayColor,
       function() {
         replayMission();
-      },
-      false));
+      }));
   }
 
   //main menu button
-  buttons.push(new Button(0,
+  buttons.push(new Button(wideButtonX,
     mainmenuStart,
-    100,
+    wideButton,
     SMALLBUTTON,
     mainmenuText,
     mainmenuColor,
     function() {
       gotoMainMenu();
     },
-    true));
+    false));
 
 }
 
 // this draws a rectangle with text
-function drawButton(  x,
-                      size,
+function drawButton(  x,y,
+                      width,
+                      height,
                       color,
-                      text) {
+                      text,
+                      filled,
+                      rounded) {
 
-  setColor(color);
-  context.globalAlpha = 1;
-  //context.fRect(0.5 * tilesz,
-  //    x,
-  //    canvas.width - (tilesz),
-  //    size * tilesz);
-  roundRect(context,
-            0.5 * tilesz,
-            x,
-            canvas.width - tilesz,
-            size * tilesz,
-            tilesz / 3,
-            true);
-
-  context.font = fontSize;
-  setColor('black');
-  context.textAlign = 'center';
-  if (size === BIGBUTTON) {
-    context.fillText(text,
-      canvas.width / 2,
-      x + 2.25*tilesz);
+  if (typeof filled === 'undefined') {
+    filled = true;
   }
-  else {
-    context.fillText(text,
-      canvas.width / 2,
-      x + 1.5*tilesz);
+  if (typeof rounded === 'undefined') {
+    rounded = true;
   }
-}
+  
+  var radius = rounded ? tilesz / 3 : 0;
 
-// this draws a rectangle with text
-function drawOutlinedButton(  x,
-                      size,
-                      color,
-                      text) {
+  // make black rectangle (done to add opacity)
+  // invisible for filled buttons 
   context.globalAlpha = .5;
   setColor('black');
   roundRect(context,
-            0.5 * tilesz,
-            x,
-            canvas.width - tilesz,
-            size * tilesz,
-            tilesz / 3,
-            true);
+    x,
+    y,
+    width,
+    height * tilesz,
+    radius,
+    true,
+    true);
 
+  //draw button's rectangle
   setColor(color);
   context.globalAlpha = 1;
   context.strokeStyle = color;
   context.lineWidth = tilesz / 10;
   roundRect(context,
-            0.5 * tilesz,
-            x,
-            canvas.width - tilesz,
-            size * tilesz,
-            tilesz / 3,
-            false,
-            true);
+    x,
+    y,
+    width,
+    height * tilesz,
+    radius,
+    filled,
+    !filled);
 
+  if (filled) {
+    // text color
+    setColor('black');
+
+  } else {
+    // text color
+    setColor(color);
+  }
+
+  //write button text
   context.font = fontSize;
   context.textAlign = 'center';
-  if (size === BIGBUTTON) {
-    context.fillText(text,
-      canvas.width / 2,
-      x + 2.25*tilesz);
-  }
-  else {
-    context.fillText(text,
-      canvas.width / 2,
-      x + 1.5*tilesz);
-  }
+  context.fillText(text,
+    width / 2 + x,
+    y + (height / 2 + .25)*tilesz);
   setColor('black');
   context.strokeStyle = 'black';
   context.lineWidth = "2";
+
 }
-
-
 
 
 
@@ -503,92 +508,153 @@ function isAllClear() {
   return cleared;
 }
 
+function scoreBarMessage( message ) {
+  setColor(topBarColor);
+  context.fRect(0, 0,
+    canvas.width,
+    TOPSPACE*tilesz-1);
+  //ctx.font = fontSize;
+  setColor('black');
+  context.textAlign = 'center';
+  context.font = fontSize;
+  context.fillText(message,
+    canvas.width/2,
+    TOPSPACE * tilesz / 1.5);
+}
 
-
-function drawControls() {
+function drawControls(platform) {
 
   var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
 
   var textHeight = 1 * tilesz;
   var textOffset = 0;
   var startY = (TOPSPACE + 0.5) * tilesz;
-  var actionText = ['Swipe Left:',
-                      'Swipe Right:',
-                      'Tap Left of Center:',
-                      'Tap Right of Center:'];
-  var responseText = ['slide left',
-                      'slide right',
-                      'rotate left',
-                      'rotate right'];
-  var advancedAText = [ 'Swipe Up:',
-                        'Swipe Down:'];
-  var advancedRText = [ 'store piece',
-                        'drop piece'];
-  // clear the board 
-  setColor('black');
-  context.fRect(0,
-          TOPSPACE * tilesz,
-          canvas.width,
-          canvas.height-TOPSPACE * tilesz);
+  var basAText = [['Swipe Left:',
+                   'Swipe Right:',
+                   'Tap Left of Center:',
+                   'Tap Right of Center:'],
+                  ['Left Arrow:',
+                   'Right Arrow:',
+                   '"S" or Up Arrow:',
+                   '"D" Key:']];
+  var basRText = ['slide left',
+                  'slide right',
+                  'rotate left',
+                  'rotate right'];
+  var advAText = [[ 'Swipe Up:',
+                    'Swipe Down:'],
+                  [ '"A" Key:',
+                    'Space Button:']];
+  var advRText = ['store piece',
+                  'drop piece'];
+  var platformsList = [ 'Mobile',
+                        'Computer'];
 
-  // draw basic controls card
-  setColor(teal);
-  context.fRect(0.5 * tilesz,
-        startY,
-        canvas.width - (tilesz),
-        (actionText.length ) * textHeight + tilesz*.6);
+  scoreBarMessage('Controls: ' + platformsList[platform]);
+
+
+
+  // clear the board 
+  clearScreen();
+
+  // draw  controls card
+  setColor(cardColor);
+  roundRect(context,
+    0.5 * tilesz,
+    startY,
+    canvas.width - (tilesz),
+    (basAText[platform].length + 7) * textHeight + tilesz*.6,
+    0,
+    true,
+    false);
   context.font = fontSizeSmall;
+
   setColor('black');
+  
+  // draw piece window
+  roundRect(context,
+    (.7) * tilesz,
+    startY+ 5*textHeight,
+    (9.1)*tilesz,
+    4*tilesz,
+    0,
+    true,
+    false);
 
   // write basic controls
   startY += textHeight;
-  for (let i = 0; i < actionText.length; i++) {
+  for (let i = 0; i < basAText[platform].length; i++) {
     textOffset = 1 * tilesz;
     context.textAlign = 'left';
-    context.fillText(actionText[i],
+    context.fillText(basAText[platform][i],
         textOffset,
         startY + textHeight * (i));
     context.textAlign = 'right';
-    context.fillText(responseText[i],
+    context.fillText(basRText[i],
         canvas.width - textOffset,
         startY + textHeight * (i));
   }
 
-  startY += (actionText.length ) * textHeight;// + tilesz*.6 ;
-  // draw advanced controls card
-  setColor(teal);
-  context.fRect(0.5 * tilesz,
-        startY,
-        canvas.width - (tilesz),
-        (advancedAText.length ) * textHeight + tilesz*.6);
-  context.font = fontSizeSmall;
+  startY += (basAText[platform].length ) * textHeight + tilesz*4,
+
   setColor('black');
+  var platformToggleX = startY + (advAText[platform].length ) * textHeight + tilesz*.6;
+
+  //initGame();
 
   // write advanced controls
   startY += textHeight;
-  for (let i = 0; i < advancedAText.length; i++) {
+  for (let i = 0; i < advAText[platform].length; i++) {
     textOffset = 1 * tilesz;
     context.textAlign = 'left';
-    context.fillText(advancedAText[i],
+    context.fillText(advAText[platform][i],
         textOffset,
         startY + textHeight * (i));
     context.textAlign = 'right';
-    context.fillText(advancedRText[i],
+    context.fillText(advRText[i],
         canvas.width - textOffset,
         startY + textHeight * (i));
   }
-  startY = canvas.height - sButtonSpacing;
 
-  buttons.push(new Button(0,
+  initControlsTest();
+
+  var mobileActive = (platform === MOBILE) ? true : false;
+  buttons.push(new Button(wideButtonX,
+    platformToggleX,
+    halfButton,
+    SMALLBUTTON * .6,
+    platformsList[0],
+    cardColor,
+    function() {
+      gotoControls(MOBILE);
+    },
+    mobileActive,
+    false));
+
+  buttons.push(new Button(halfButtonFarX,
+    platformToggleX,
+    halfButton,
+    SMALLBUTTON * .6,
+    platformsList[1],
+    cardColor,
+    function() {
+      gotoControls(DESKTOP);
+    },
+    !mobileActive,
+    false));
+
+
+  startY = canvas.height - sButtonSpacing;
+  buttons.push(new Button(wideButtonX,
     startY,
-    100,
+    wideButton,
     SMALLBUTTON,
     "Main Menu",
     mainmenuColor,
     function() {
       gotoMainMenu();
-    },
-    false));
+    }));
+
 
 
 
@@ -612,13 +678,10 @@ function drawSettings() {
                     'Tropical'];
                    // 'Trans Flag'];
 
-  setColor('black');
-  context.fRect(0,
-          TOPSPACE * tilesz,
-          canvas.width,
-          canvas.height-TOPSPACE * tilesz);
+  scoreBarMessage('Settings');
+  clearScreen();
 
-  setColor(teal);
+  setColor(cardColor);
   context.fRect(0.5 * tilesz,
         startY,
         canvas.width - (tilesz),
@@ -651,16 +714,15 @@ function drawSettings() {
   }
 
   startY = canvas.height - sButtonSpacing;
-  buttons.push(new Button(0,
+  buttons.push(new Button(wideButtonX,
     startY,
-    100,
+    wideButton,
     SMALLBUTTON,
     "Main Menu",
     mainmenuColor,
     function() {
       gotoMainMenu();
-    },
-    false));
+    }));
 
   // highlight current settings
   // hardcoding in 1 bag and tropical
@@ -719,9 +781,9 @@ function nextMission() {
   }
 }
 
-function gotoControls() {
-  gameScreen = SETTINGS;
-  drawControls();
+function gotoControls(platform) {
+  gameScreen = CONTROLS;
+  drawControls(platform);
 }
 
 function gotoSettings() {
@@ -736,11 +798,7 @@ function gotoMainMenu() {
 
 function drawMainMenu() {
   var pad = tilesz *.5;
-  setColor('black');
-  context.fRect(0,
-          TOPSPACE * tilesz,
-          canvas.width,
-          canvas.height-TOPSPACE * tilesz);
+  clearScreen();
 
   var bButtonSpacing = (BIGBUTTON + 0.5) * tilesz;
   var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
@@ -754,52 +812,50 @@ function drawMainMenu() {
 // test area --------------
 
   // play endless button
-  buttons.push(new Button(0,
+  buttons.push(new Button(wideButtonX,
     ELButtonY,
-    100,
+    wideButton,
     BIGBUTTON,
     'Play Endless',
     endlessColor,
     function() {
       startEndless();
-    },
-    false));
+    }));
 
   // play missions button
-  buttons.push(new Button(0,
+  buttons.push(new Button(wideButtonX,
     MSButtonY, 
-    100,
+    wideButton,
     BIGBUTTON,
     'Play Missions',
     missionsColor, 
     function() {
       startMissions();
-    },
-    false));
+    }));
 
   //go to controls button
-  buttons.push(new Button(0,
+  buttons.push(new Button(wideButtonX,
     ControlButtonY, 
-    100,
+    wideButton,
     SMALLBUTTON,
     'Controls',
     controlsColor, 
     function() {
-      gotoControls();
+      gotoControls(MOBILE);
     },
-    true));
+    false));
 
   // go to settings button
-  buttons.push(new Button(0,
+  buttons.push(new Button(wideButtonX,
     SettButtonY, 
-    100,
+    wideButton,
     SMALLBUTTON,
     'Settings',
     settingsColor, 
     function() {
       gotoSettings();
     },
-    true));
+    false));
 
 
   //drawButton(DGButtonY,BIGBUTTON, digColor, 'Play Dig');
@@ -1009,19 +1065,21 @@ function initRandomizer() {
   makeAndShuffleBag();
 }
 
-function initBoard() {
-  for (let r = 0; r < BOARDHEIGHT; r++) {
+function initBoard(rows,cols) {
+  var board = [];
+  for (let r = 0; r < rows; r++) {
     board[r] = [];
-    for (let c = 0; c < BOARDWIDTH; c++) {
+    for (let c = 0; c < cols; c++) {
       board[r][c] = ['', -1];
     }
   }
+  return board;
 }
 
 function holdPiece() {
   if (!piece.recentlyHeld) {
-    if (isPieceHeld === 0) { // ie no piece held
-      isPieceHeld = 1;
+    if (!isPieceHeld) { // ie no piece held
+      isPieceHeld = true;
       heldPieceNumber = currentPieceNumber;
       heldPiece = pieces[heldPieceNumber];
       piece.undraw();
@@ -1086,7 +1144,7 @@ function drawSquare(x, y) {
 // --------------------------------------------------
 // Defining the Button prototype
 
-var Button = function(x, y, width, height, text, color, fn, outlined) {
+var Button = function(x, y, width, height, text, color, fn, filled, rounded) {
   this.x = x;
   this.y = y;
   this.width = width;
@@ -1097,25 +1155,24 @@ var Button = function(x, y, width, height, text, color, fn, outlined) {
   //this.img.src = imgurl;
   this.fn = fn; //pass the button's click function
 
-  if ( outlined ) {
-    drawOutlinedButton(this.y, height, this.color, this.text);
-  } else {
-    drawButton(this.y, height, this.color, this.text);
-  }
+  drawButton(this.x, this.y, this.width, height, this.color, this.text, filled, rounded);
 //  this.draw();
-};
-
-Button.prototype.draw = function() {
-  drawButton(y, BIGBUTTON, color, text);
 };
 
 Button.prototype.mouse_down = function(mouseX, mouseY) {
 //y > ELButtonY && y < ELButtonY + BIGBUTTON*tilesz
 //  var hit = ( mouseX > canvas.width / 2 ) ? true : false;
-  var hit = ( mouseY > this.y && mouseY < this.y + this.height*tilesz ) ? true : false;
+  var hit = ( mouseY > this.y && 
+    mouseY < this.y + this.height*tilesz &&
+    mouseX > this.x &&
+    mouseX < this.x + this.width
+        ) ? true : false;
   if (hit == true) {
+    console.log('mouseX: ' + mouseX + ', x: '+this.x);
+    console.log('mouseY: ' + mouseY + ', y: '+this.y);
     console.log(this.text + ' button pressed');
     clearButtons();
+    drawScoreBar();
     this.fn(); //run the button's function
   }
   return hit;
@@ -1124,7 +1181,12 @@ Button.prototype.mouse_down = function(mouseX, mouseY) {
 
 // --------------------------------------------------
 // Defining the Piece object
-function Piece(patterns, color, shapeNumber) {
+function Piece(patterns, color, shapeNumber, startY) {
+
+  if (typeof startY === 'undefined') {
+    startY = -4;
+  }
+
   this.pattern = patterns[0];
   this.patterns = patterns;
   this.patterni = 0;
@@ -1132,9 +1194,11 @@ function Piece(patterns, color, shapeNumber) {
   this.number = shapeNumber;
 
   this.color = color;
-
-  this.x = BOARDWIDTH / 2 - parseInt(Math.ceil(this.pattern.length / 2), 10);
-  this.y = -4;
+  var centerX = (BOARDWIDTH % 2 === 0 ) ? 
+    BOARDWIDTH / 2 :
+    ( BOARDWIDTH + 1 ) / 2;
+  this.x = centerX - parseInt(Math.ceil(this.pattern.length / 2), 10);
+  this.y = startY;
   this.ghosty;
 }
 
@@ -1188,16 +1252,18 @@ Piece.prototype._collides = function (dx, dy, pat) {
 
       var x = this.x + ix + dx;
       var y = this.y + iy + dy;
+    //  if (gameScreen === INPLAY) {
       if (y >= BOARDHEIGHT || x < 0 || x >= BOARDWIDTH) {
         return WALL;
       }
+      // following else if's were just if's before
 
-      if (y < 0) {
+      else if (y < 0) {
         // Ignore negative space rows
         continue;
       }
 
-      if (board[y][x][0] !== '') {
+      else if (board[y][x][0] !== '') {
         return BLOCK;
       }
     }
@@ -1356,12 +1422,18 @@ Piece.prototype.draw = function (context) {
 };
 
 Piece.prototype.drawGhost = function () {
+  if (gameScreen === CONTROLS) {
+    return;
+  }
   context.globalAlpha = 0.5;
   this._fillGhost(this.color);
   context.globalAlpha = 1.0;
 };
 
 Piece.prototype.undrawGhost = function () {
+  if (gameScreen === CONTROLS) {
+    return;
+  }
   this._fillGhost(clear);
 };
 
@@ -1410,7 +1482,7 @@ function handleTouchMove(evt) {
   if (!xDown || !yDown) {
     return;
   }
-  if (gameScreen != INPLAY) {
+  if (gameScreen != INPLAY && gameScreen != CONTROLS) {
     return;
   }
 
@@ -1446,9 +1518,11 @@ function handleTouchMove(evt) {
 document.addEventListener('click', handleClick, false);
 
 function handleClick(evt) {
-  var x = evt.clientX;
-  var y = evt.clientY;
+  var x = evt.offsetX;
+  var cx = evt.clientX;
+  var y = evt.offsetY; 
 
+  console.log('offestX: '+x+ ' offestY: '+y);
   var button_was_clicked = buttons.some(function(b) {
     return b.mouse_down(x, y);
   });
@@ -1460,8 +1534,8 @@ function handleClick(evt) {
   if (gameScreen == SETTINGS) {
     interpretSettingsTap(y);
   } 
-  else if (gameScreen == INPLAY) {
-    if (x < wWidth / 2) {
+  else if (gameScreen == INPLAY || gameScreen == CONTROLS) {
+    if (cx < wWidth / 2) {
       piece.rotate(3);
     } else {
       piece.rotate(1);
@@ -1536,13 +1610,15 @@ function drawSettingsRectangle(y) {
 
 function drawRectangle(x,y,width,height,color) {
 
-    context.globalAlpha = 1.0;
-    context.beginPath();
-    context.lineWidth = "2";
-    context.strokeStyle = color;
-    context.rect(x, y, width, height); 
-    context.stroke();
+  context.globalAlpha = 1.0;
+  context.beginPath();
+  context.lineWidth = "2";
+  context.strokeStyle = color;
+  context.rect(x, y, width, height); 
+  context.stroke();
+
 }
+
 
 
 // --------------------------------------------------
@@ -1577,15 +1653,13 @@ function key(k) {
 
   
   //if (gdone) {
-  if (gameScreen != INPLAY) {
+  if (gameScreen != INPLAY && gameScreen != CONTROLS) {
     return;
   }
 
   if (k === 38) { // Player pressed up
     piece.rotate(3);
     dropStart = Date.now();
-  } else if (k === 40) { // Player holding down
-    piece.down();
   } else if (k === 37) { // Player holding left
     piece.moveLeft();
   } else if (k === 39) { // Player holding right
@@ -1596,11 +1670,19 @@ function key(k) {
   } else if (k === 68) { // Player pressed d
     piece.rotate(1);
     dropStart = Date.now();
+  }
+
+  if (gameScreen != INPLAY) {
+    return;
+  }
+
+  if (k === 40) { // Player holding down
+    piece.down();
+  } else if (k === 65) { // Player pressed a
+    holdPiece();
   } else if (k === 70) { // Player pressed f
     piece.rotate(2);
     dropStart = Date.now();
-  } else if (k === 65) { // Player pressed a
-    holdPiece();
   } else if (k === 32) { // Player pressed space
     while (piece.down() === 0) {
       continue;
@@ -1665,6 +1747,7 @@ function initSideBoard() {
 
 function main() {
   //if (!gdone) {
+  
   if (gameScreen == INPLAY) {
     var now = Date.now();
     var delta = now - dropStart;
@@ -1683,11 +1766,33 @@ function main() {
   }
 }
 
+function initControlsTest() {
+  piece = null;
+  BOARDWIDTH = 9; // don't like that I'm changing something that was supposed to be constant
+  board = initBoard(BOARDHEIGHT, BOARDWIDTH);
+  boardX = .75;
+  isPieceHeld = true;
+  done = false;
+  gdone = false;
+  //recentWin = false;
+  gameScreen = CONTROLS;
+ // drawMainMenu();
+ // gameScreen = MAINMENU;
+  //dropStart = Date.now();
+  var p = pieces[5];
+  piece = new Piece(p[0], p[1],  5, 6);
+  piece.draw(context);
+  //boardX = ( canvas.width - BOARDWIDTH * tilesz ) / 2;
+
+}
+
+
 function initGame() {
+  BOARDWIDTH = 4;// get's changed in initControls, don't like it
   piece = null;
   initCanvas();
   initScores();
-  initBoard();
+  board = initBoard(BOARDHEIGHT, BOARDWIDTH);
   initSideBoard();
   if (gameMode === EL) {
     initRandomizer();
@@ -1695,7 +1800,7 @@ function initGame() {
     bag = missions[currentMission][0].slice().reverse();
     //bag = missions[1].reverse();
   }
-  isPieceHeld = 0;
+  isPieceHeld = false;
   done = false;
   gdone = false;
   recentWin = false;
