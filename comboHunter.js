@@ -3,9 +3,10 @@ var BLOCK = 2;
 
 var MOBILE = 0;
 var DESKTOP = 1;
-/* global button list */
 
+// global button list 
 var buttons = [];
+var radioLists = [];
 
 // --------------------------------------------------
 // colors 
@@ -277,15 +278,17 @@ function gameOver(result) {
   }
   context.globalAlpha = 0.6;
   clearScreen();
-  
+
   setColor(resultsColor);
   context.globalAlpha = 1;
 
+  // draw results card background
   context.fRect(0.5 * tilesz,
         (TOPSPACE + 0.5) * tilesz,
         canvas.width - (tilesz),
         7 * tilesz);
 
+  // write results
   context.font = fontSize;
   setColor('black');
   context.textAlign = 'center';
@@ -405,71 +408,6 @@ function drawContinueOptions(result) {
 
 }
 
-// this draws a rectangle with text
-function drawButton(  x,y,
-                      width,
-                      height,
-                      color,
-                      text,
-                      filled,
-                      rounded) {
-
-  if (typeof filled === 'undefined') {
-    filled = true;
-  }
-  if (typeof rounded === 'undefined') {
-    rounded = true;
-  }
-  
-  var radius = rounded ? tilesz / 3 : 0;
-
-  // make black rectangle (done to add opacity)
-  // invisible for filled buttons 
-  context.globalAlpha = .5;
-  setColor('black');
-  roundRect(context,
-    x,
-    y,
-    width,
-    height * tilesz,
-    radius,
-    true,
-    true);
-
-  //draw button's rectangle
-  setColor(color);
-  context.globalAlpha = 1;
-  context.strokeStyle = color;
-  context.lineWidth = tilesz / 10;
-  roundRect(context,
-    x,
-    y,
-    width,
-    height * tilesz,
-    radius,
-    filled,
-    !filled);
-
-  if (filled) {
-    // text color
-    setColor('black');
-
-  } else {
-    // text color
-    setColor(color);
-  }
-
-  //write button text
-  context.font = fontSize;
-  context.textAlign = 'center';
-  context.fillText(text,
-    width / 2 + x,
-    y + (height / 2 + .25)*tilesz);
-  setColor('black');
-  context.strokeStyle = 'black';
-  context.lineWidth = "2";
-
-}
 
 
 
@@ -611,8 +549,6 @@ function drawControls(platform) {
   setColor('black');
   var platformToggleX = startY + (advAText[platform].length ) * textHeight + tilesz*.6;
 
-  //initGame();
-
   // write advanced controls
   startY += textHeight;
   for (let i = 0; i < advAText[platform].length; i++) {
@@ -701,28 +637,37 @@ function drawSettings() {
   setColor('black');
 
   startY += textHeight;
-  context.textAlign = 'left';
-  for (let i = 0; i < randomizerText.length; i++) {
-    if (i === 0) {
-      textOffset = 1 * tilesz;
-    } else {
-      textOffset = 2.5 * tilesz;
-    }
-    context.fillText(randomizerText[i],
-        textOffset,
-        startY + textHeight * (i));
-  }
+
+  //very hacky
+  var bagSizeToSelection = [4,1,2,0,0,0,0,3];
+  radioLists.push(new RadioList(tilesz,
+    startY,
+    canvas.width - (2 * tilesz),
+    textHeight,
+    randomizerText,
+    function() {
+      var selectionToBagSize = [1,2,7,0];
+      bagSize = selectionToBagSize[this.selection-1];
+      initRandomizer();
+      console.log('bag size: '+ bagSize);
+    },
+    true,
+    bagSizeToSelection[bagSize]));
+  
   startY += textHeight * (randomizerText.length);
-  for (let i = 0; i < themeText.length; i++) {
-    if (i === 0) {
-      textOffset = 1 * tilesz;
-    } else {
-      textOffset = 2.5 * tilesz;
-    }
-    context.fillText(themeText[i],
-        textOffset,
-        startY + textHeight * (i));
-  }
+
+
+  radioLists.push(new RadioList(tilesz,
+    startY,
+    canvas.width - (tilesz),
+    textHeight,
+    themeText,
+    function() {
+     // 
+    },
+    true,
+    1));
+    
 
   startY = canvas.height - sButtonSpacing;
   buttons.push(new Button(wideButtonX,
@@ -740,16 +685,13 @@ function drawSettings() {
   startY = (TOPSPACE + 0.5) * tilesz;
   //very hacky
   var bagSizeMap = [4,1,2,0,0,0,0,3];
-  drawSettingsRectangle(startY + bagSizeMap[bagSize]*textHeight + 0.4 *textHeight );
   var themeMap = [6,7];
-  drawSettingsRectangle(startY + themeMap[theme]*textHeight + 0.4*textHeight );
 
 
 
 }
 
 function clearButtons() {
-  console.log('Number of buttons: '+ buttons.length);
   buttons = [];
   
 }
@@ -770,6 +712,12 @@ function startPractice() {
 }
 
 function replayMission() {
+  reset();
+}
+
+function playMode(mode) {
+  radioLists = [];
+  gameMode = mode;
   reset();
 }
 
@@ -839,7 +787,7 @@ function drawMainMenu() {
     '49 Piece Practice',
     practiceColor, 
     function() {
-      startPractice();
+      playMode(PP);
     }));
 
   // missions mode button
@@ -850,7 +798,7 @@ function drawMainMenu() {
     'Missions Mode',
     missionsColor, 
     function() {
-      startMissions();
+      playMode(MS);
     }));
 
   // challenge mode button
@@ -861,7 +809,7 @@ function drawMainMenu() {
     'Challenge Mode',
     endlessColor,
     function() {
-      startEndless();
+      playMode(CH)
     }));
 
   //go to controls button
@@ -927,7 +875,7 @@ function initScores() {
   numpieces = 0;
 }
 
-function drawScoreBar() {
+function drawStatusBar() {
   setColor(topBarColor);
   context.fRect(0, 0,
     canvas.width,
@@ -1063,7 +1011,7 @@ function newPieceDet(blockNumber) {
   
   //Drawing these things here so that they have the color of the current piece
   drawBorders();
-  drawScoreBar();
+  drawStatusBar();
   return new Piece(p[0], p[1], blockNumber);
 }
 
@@ -1078,7 +1026,7 @@ function nextPiece() {
     return newPieceDet(heldPieceNumber);
   } else {
     if (gameMode === MS) {
-      drawScoreBar();
+      drawStatusBar();
       if (combo > 0) {
         recentWin = true;
         gameOver(WIN);
@@ -1087,7 +1035,7 @@ function nextPiece() {
         gameOver(BADWIN);
       }
     } else if (gameMode === PP) {
-      drawScoreBar();
+      drawStatusBar();
       gameOver(FINISHED);
     }
   }
@@ -1174,8 +1122,6 @@ function drawSquare(x, y) {
 
 
 
-
-
 // --------------------------------------------------
 // Defining the Button prototype
 
@@ -1203,15 +1149,182 @@ Button.prototype.mouse_down = function(mouseX, mouseY) {
     mouseX < this.x + this.width
         ) ? true : false;
   if (hit == true) {
-    console.log('mouseX: ' + mouseX + ', x: '+this.x);
-    console.log('mouseY: ' + mouseY + ', y: '+this.y);
     console.log(this.text + ' button pressed');
     clearButtons();
-    drawScoreBar();
+    drawStatusBar();
     this.fn(); //run the button's function
   }
   return hit;
 };
+
+// this draws a rectangle with text
+function drawButton(  x,y,
+                      width,
+                      height,
+                      color,
+                      text,
+                      filled,
+                      rounded) {
+
+  if (typeof filled === 'undefined') {
+    filled = true;
+  }
+  if (typeof rounded === 'undefined') {
+    rounded = true;
+  }
+  
+  var radius = rounded ? tilesz / 3 : 0;
+
+  // make black rectangle (done to add opacity)
+  // invisible for filled buttons 
+  context.globalAlpha = .5;
+  setColor('black');
+  roundRect(context,
+    x,
+    y,
+    width,
+    height * tilesz,
+    radius,
+    true,
+    true);
+
+  //draw button's rectangle
+  setColor(color);
+  context.globalAlpha = 1;
+  context.strokeStyle = color;
+  context.lineWidth = 2;
+  roundRect(context,
+    x,
+    y,
+    width,
+    height * tilesz,
+    radius,
+    filled,
+    !filled);
+
+  if (filled) {
+    // text color
+    setColor('black');
+
+  } else {
+    // text color
+    setColor(color);
+  }
+
+  //write button text
+  context.font = fontSize;
+  context.textAlign = 'center';
+  context.fillText(text,
+    width / 2 + x,
+    y + (height / 2 + .25)*tilesz);
+  setColor('black');
+  context.strokeStyle = 'black';
+  context.lineWidth = "2";
+
+}
+
+// --------------------------------------------------
+// Defining the Radio Button List prototype
+
+var RadioList = function(x, y, width, lineHeight, options, fn, titled, selectedOption) {
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.lineHeight = lineHeight;
+  this.options = options;
+  this.fn = fn; //pass the button's click function
+  this.titled = titled;
+  this.selectedOption = selectedOption;
+
+  this.height = options.length * lineHeight;
+
+  this.draw();
+  this.new_selection(selectedOption);
+
+};
+
+RadioList.prototype.mouse_down = function(mouseX, mouseY) {
+
+  var verticalAdjustment = .75 * this.lineHeight;
+  var y = this.y - verticalAdjustment;
+
+  var relativeY = mouseY - y;
+  var hit = ( relativeY > 0 && 
+    relativeY < this.height &&
+    mouseX > this.x &&
+    mouseX < this.x + this.width
+        ) ? true : false;
+
+  var selected = -1;
+
+  if (hit === true) {
+    selected = Math.floor( relativeY / this.lineHeight);
+    this.new_selection(selected);
+    this.fn(); //run the button's function
+  }
+  return hit;
+};
+
+RadioList.prototype.draw = function() {
+
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var textOffset = 0;
+
+  context.textAlign = 'left';
+  for (let i = 0; i < this.options.length; i++) {
+    if (i === 0 && this.titled) {
+        textOffset = 0;
+    } else {
+      textOffset = 1.5 * tilesz;
+    }
+    setColor('black');
+    context.fillText(this.options[i],
+        this.x + textOffset,
+        this.y + this.lineHeight * i );
+  }
+}
+
+RadioList.prototype.new_selection = function(selected) {
+  this.selection = selected;
+  for (let i = 0; i < this.options.length; i++) {
+    if (i === 0 && this.titled) {
+        textOffset = 0;
+    } else {
+      textOffset = 1.5 * tilesz;
+      drawCircle(context,
+        this.x + 0.5 * tilesz, 
+        this.y + this.lineHeight * (i-.2),
+        tilesz/2,
+        cardColor,
+        true,
+        true);
+    }
+    if (i === selected) {
+      drawCircle(context,
+        this.x + 0.5 * tilesz, 
+        this.y + this.lineHeight * (i-.2),
+        tilesz/3,
+        mainmenuColor,
+        true,
+        false);
+    }
+  }
+}
+
+
+function drawCircle(ctx, x, y, radius, color, filled, outlined) {
+  setColor(color);
+  ctx.lineWidth = 2 ;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  if (filled) {
+    ctx.fill();
+  } 
+  if (outlined) { 
+    ctx.stroke(); 
+  }
+}
+
 
 
 // --------------------------------------------------
@@ -1400,7 +1513,7 @@ Piece.prototype.lock = function () {
     }
     
 
-    //drawScoreBar();
+    //drawStatusBar();
     drawBoard();
   } else { // no lines were cleared
     if (combo > 0 && gameMode !== PP) { // but we were in the middle of combo
@@ -1568,14 +1681,16 @@ function handleClick(evt) {
     return b.mouse_down(x, y);
   });
 
+  var radio_list_was_clicked = radioLists.some(function(b) {
+    return b.mouse_down(x, y);
+  });
+
   if (button_was_clicked) return; //return early because button was clicked
 
-  //if (gdone) {
-  
   if (gameScreen == SETTINGS) {
     interpretSettingsTap(y);
   } 
-  else if (gameScreen == INPLAY || gameScreen == CONTROLS) {
+  else if (gameScreen === INPLAY || gameScreen == CONTROLS) {
     if (cx < wWidth / 2) {
       piece.rotate(3);
     } else {
@@ -1587,66 +1702,17 @@ function handleClick(evt) {
 
 // the logic of taps / clicks performed on Settings screen
 function interpretSettingsTap(y) {
-  // this is going to be tough
-  // layout of settings page is going to essentially be 
-  // rewritten here.
-  // Changing layout of settings page will require redoing
-  // this whole function
   var textHeight = 1.5 * tilesz;
   // textOffset is 1*tilesz on header, 2.5*tilesz on item
   var textOffset = 0;
   var startY = (TOPSPACE + 0.5) * tilesz;
-  var randomizerText = ['Randomizer:',
-                        '1 Bag',
-                        '2 Bag',
-                        '7 Bag',
-                        'Random'];
   var themeText = [ 'Theme:',
                     'Tropical'];
                    // 'Trans Flag'];
 
-  var randomizerTextY = startY + textHeight;
-  // each subsequent line is another textHeight away
-  var themeTextY = randomizerTextY + randomizerText.length * textHeight;
   // each subsequent line is another textHeight away
 
-  // I don't know where that extra .25 comes from?
-  var MMButtonY = themeTextY + themeText.length * textHeight + .25 * textHeight;
-
-  var bagSizeMap = [1,2,7,0];
-
-
-  // need a draw selected settings function
-  // need to interpret when a click is clicking a setting option
-  //  and redraw settings to reflect selection
-  //  also change the settings themselves
-  // Start with bag size: will change bagSize and call initRandomizer()
-  // initRandomizer() will need to be updated
-  var tempY;
-
-  if ( y > randomizerTextY + .5*textHeight && y < randomizerTextY + 4.5*textHeight) {
-
-    tempY = Math.floor((y - (randomizerTextY + .5*textHeight)) / (textHeight));
-
-    //drawRectangle(randomizerTextY + (tempY * textHeight)  + (0.6 * tilesz));
-
-    bagSize = bagSizeMap[tempY];
-    initRandomizer();
-    drawSettings();
-  } else {
-   // drawSettings();
-   // drawRectangle(y);
-    //pass;
-  } 
 }
-
-function drawSettingsRectangle(y) {
-    drawRectangle(tilesz,
-      y,
-      canvas.width - (2 * tilesz),
-      1.25 * tilesz,
-      'black');
-  }
 
 
 function drawRectangle(x,y,width,height,color) {
@@ -1659,7 +1725,6 @@ function drawRectangle(x,y,width,height,color) {
   context.stroke();
 
 }
-
 
 
 // --------------------------------------------------
@@ -1783,14 +1848,12 @@ function initSideBoard() {
     canvas.height);
   
   drawBorders( '#99D3DF' );
-  drawScoreBar();
+  drawStatusBar();
   // line seperating preview from hold
   //context.fillStyle = '#99D3DF';
 }
 
 function main() {
-  //if (!gdone) {
-  
   if (gameScreen == INPLAY) {
     var now = Date.now();
     var delta = now - dropStart;
@@ -1832,7 +1895,6 @@ function initControlsTest() {
 
 function initGame() {
   BOARDWIDTH = 4;// get's changed in initControls, don't like it
-  piece = null;
   initCanvas();
   initScores();
 
@@ -1849,8 +1911,6 @@ function initGame() {
   gdone = false;
   recentWin = false;
   gameScreen = INPLAY;
- // drawMainMenu();
- // gameScreen = MAINMENU;
   dropStart = Date.now();
   piece = null;
   theme = TROPICAL;
