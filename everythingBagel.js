@@ -2,8 +2,16 @@ var WALL = 1;
 var BLOCK = 2;
 var SILVER = 7;
 var GOLD = 8;
+
+
+// global button list 
+var buttons = [];
+
 // --------------------------------------------------
 // colors 
+// MayaBlue = '#55cdfc'
+// AmaranthPink = '#f7a8b8'
+
 pink = '#F06292';
 blue = '#42A5F5';
 cyan = '#26C6DA';
@@ -14,17 +22,21 @@ deor = '#FF7043';
 
 teal = '#E0F2F1';
 
-//topBarColor = teal;
-//resultsColor = teal;
-//continueColor = cyan;
-//replayColor = lime;
-//returnColor = blue;
+topBarColor = teal;
+resultsColor = teal;
+cardColor = teal;
+continueColor = cyan;
+replayColor = lime;
+returnColor = blue;
+mainmenuColor = blue;
 
-//endlessColor = cyan;
-//missionsColor = ambe;
-//digColor = deor;
-//settingsColor = pink;
+endlessColor = cyan;
+missionsColor = ambe;
+practiceColor = deor;
+settingsColor = pink;
+controlsColor = gree;
 
+var clear = 'black';
 menuColor = teal;
 
 var pieces = [
@@ -47,7 +59,17 @@ var pieces = [
   [Z, 'red']
 ];
 */
-
+/* alt colors
+ var pieces = [
+  [I, 'white'],
+  [J, MayaBlue],
+  [L, AmaranthPink],
+  [O, 'white'],
+  [S, MayaBlue],
+  [T, 'white'],
+  [Z, AmaranthPink]
+ ];
+*/
 var done;
 var gdone;
 
@@ -63,7 +85,7 @@ var bagText = document.getElementById('bagsize');
 // For sizing and graphics
 var canvas = document.getElementById('board');
 var context = canvas.getContext('2d');
-var clear = window.getComputedStyle(canvas).getPropertyValue('background-color');
+//var clear = window.getComputedStyle(canvas).getPropertyValue('background-color');
 var gridChoice = document.getElementsByName('grids');
 var gridsOn = 1;
 
@@ -82,6 +104,16 @@ var wHeight;
 var wWidth;
 var thinLine;
 var thickLine;
+var wideButton;
+var wideButtonX;
+var halfButton;
+var halfButtonFarX;
+
+var fontSize;
+var fontSizeSmall;
+
+var SMALLBUTTON = 2.5;
+var BIGBUTTON   = 4;
 
 context.lineWidth = 1;
 context.sRect = function (x, y, w, h, l) {
@@ -101,12 +133,18 @@ function initCanvas() {
   wHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   wWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   tilesz = parseInt(wHeight * BOARDPERCENT / BOARDHEIGHT);
+  fontSize      = '' + tilesz + 'px Arial';
+  fontSizeSmall = '' + tilesz * .6 + 'px Arial';
   thinLine = 0.0125;
   thickLine = 0.25;
   boardX = LEFTSPACE + 1 * thickLine;
   sideBarX = LEFTSPACE + BOARDWIDTH + 2 * thickLine;
   canvas.width = (sideBarX + RIGHTSPACE) * tilesz;
   canvas.height = (TOPSPACE + BOARDHEIGHT + BOTTOMSPACE) * tilesz;
+  wideButton = canvas.width - tilesz;
+  wideButtonX = .5 * tilesz;
+  halfButton = (canvas.width - tilesz) / 2;
+  halfButtonFarX = canvas.width/2;
   for (let i = 0; i < gridChoice.length; i++) {
     if (gridChoice[i].checked) {
       gridsOn = parseInt(gridChoice[i].value);
@@ -123,20 +161,61 @@ function setColor(color) {
   }
 }
 
-// var MayaBlue = '#55cdfc'
-// var AmaranthPink = '#f7a8b8'
+/**
+ * From stackoverflow:
+ * Draws a rounded rectangle using the current state of the canvas.
+ * If you omit the last three params, it will draw a rectangle
+ * outline with a 5 pixel border radius
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Number} x The top left x coordinate
+ * @param {Number} y The top left y coordinate
+ * @param {Number} width The width of the rectangle
+ * @param {Number} height The height of the rectangle
+ * @param {Number} [radius = 5] The corner radius; It can also be an object 
+ *                 to specify different radii for corners
+ * @param {Number} [radius.tl = 0] Top left
+ * @param {Number} [radius.tr = 0] Top right
+ * @param {Number} [radius.br = 0] Bottom right
+ * @param {Number} [radius.bl = 0] Bottom left
+ * @param {Boolean} [fill = false] Whether to fill the rectangle.
+ * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
+ */
+function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+  if (typeof stroke === 'undefined') {
+    stroke = true;
+  }
+  if (typeof radius === 'undefined') {
+    radius = 5;
+  }
+  if (typeof radius === 'number') {
+    radius = {tl: radius, tr: radius, br: radius, bl: radius};
+  } else {
+    var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
+    for (var side in defaultRadius) {
+      radius[side] = radius[side] || defaultRadius[side];
+    }
+  }
+  ctx.beginPath();
+  ctx.moveTo(x + radius.tl, y);
+  ctx.lineTo(x + width - radius.tr, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+  ctx.lineTo(x + width, y + height - radius.br);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+  ctx.lineTo(x + radius.bl, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+  ctx.lineTo(x, y + radius.tl);
+  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+  ctx.closePath();
+  if (fill) {
+    ctx.fill();
+  }
+  if (stroke) {
+    ctx.stroke();
+  }
 
-// alt colors
-// var pieces = [
-//  [I, 'white'],
-//  [J, MayaBlue],
-//  [L, AmaranthPink],
-//  [O, 'white'],
-//  [S, MayaBlue],
-//  [T, 'white'],
-//  [Z, AmaranthPink]
-// ];
-clear = 'black';
+}
+
+
 
 // --------------------------------------------------
 // For Piece Hold
@@ -151,48 +230,200 @@ document.getElementById('newGame').onclick = reset;
 var WIN   = 1;
 var LOSE  = 0;
 
+
+var gameScreen;
+var INPLAY    = 0;
+var GAMEOVER  = 1;
+var MAINMENU  = 2;
+var CONTROLS  = 3;
+var SETTINGS  = 4;
+
 function reset() {
+  buttons = [];
   gamesCount += 1;
   initGame();
   drawBoard();
   main();
 }
 
-function gameOver(result) {
-  var message;
-  if (result === WIN) {
-    message = 'Success!'
-    //if(playingMissions) { 
-    //  currentMission += 1;
-    //
-    //currentMission %= missions.length;
-    //}
-  } else {
-    message = 'GAME OVER'
-  }
-  context.globalAlpha = 0.4;
+function clearScreen() {
   setColor('black');
   context.fRect(0,
           TOPSPACE * tilesz,
           canvas.width,
           canvas.height-TOPSPACE * tilesz);
+}
+
+function gameOver(result) {
+  var message = '';
+  gameScreen = GAMEOVER;
+  if (result === WIN) {
+    message = 'Success!'
+  } else {
+    message = 'GAME OVER'
+  }
+  context.globalAlpha = 0.6;
+  clearScreen();
+
   setColor(menuColor);
   context.globalAlpha = 1;
+
+  // draw results card background
   context.fRect(0.5 * tilesz,
-          canvas.height / 2.5 - 1.5*tilesz,
-          canvas.width - (tilesz),
-          5.5 * tilesz);
-  context.font = '' + tilesz + 'px Arial';
+        canvas.height / 2.5 - 1.5*tilesz,
+        canvas.width - (tilesz),
+        5.5 * tilesz);
+
+  // write results
+  context.font = fontSize;
   setColor('black');
   context.textAlign = 'center';
   context.fillText(message,
-            canvas.width / 2,
-            canvas.height / 2.5);
+        canvas.width / 2,
+        canvas.height / 2.5);
   context.fillText('(press r to play agian)',
-            canvas.width/2,
-            canvas.height / 2.5 + 2.5 * tilesz);
+        canvas.width/2,
+        canvas.height / 2.5 + 2.5 * tilesz);
 
   gdone = true;
+  drawContinueOptions(result);
+}
+
+function drawContinueOptions(result) {
+  var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+
+  var continueStart = (TOPSPACE + 12) * tilesz;
+  var replayStart   = continueStart + buttonSpacing;
+  var mainmenuStart   = replayStart + buttonSpacing;
+
+  var continueText = "Play Again";
+  var replayText = "Replay Mission";
+  var mainmenuText = "Main Menu";
+  if (gameMode === MS) {
+    continueText = "Play Next Mission";
+  }
+
+  //continue button
+  if ( gameMode !== MS || result === WIN ) {
+  buttons.push(new Button(wideButtonX,
+    continueStart,
+    wideButton,
+    SMALLBUTTON,
+    continueText,
+    continueColor,
+    function() {
+      continuePlaying();
+    }));
+  } else {
+    // draw 'fake' button with no functionality
+    drawButton(wideButtonX,continueStart,
+      wideButton,
+      SMALLBUTTON,
+      continueColor, 
+      continueText,
+      true,
+      true);
+    //shade out continue button  
+    context.globalAlpha = 0.4;
+    setColor('black');
+    context.fRect(0.5 * tilesz,
+      continueStart,
+      canvas.width - (tilesz),
+      SMALLBUTTON * tilesz);
+    context.globalAlpha = 1;
+  }
+
+  //replay button
+  if (gameMode === MS) {
+    buttons.push(new Button(wideButtonX,
+      replayStart,
+      wideButton,
+      SMALLBUTTON,
+      replayText,
+      replayColor,
+      function() {
+   //     replayMission();
+      }));
+  }
+
+  //main menu button
+  buttons.push(new Button(wideButtonX,
+    mainmenuStart,
+    wideButton,
+    SMALLBUTTON,
+    mainmenuText,
+    mainmenuColor,
+    function() {
+    //  gotoMainMenu();
+    },
+    false));
+
+}
+
+// this draws a rectangle with text
+function drawButton(  x,y,
+                      width,
+                      height,
+                      color,
+                      text,
+                      filled,
+                      rounded) {
+
+  if (typeof filled === 'undefined') {
+    filled = true;
+  }
+  if (typeof rounded === 'undefined') {
+    rounded = true;
+  }
+  
+  var radius = rounded ? tilesz / 3 : 0;
+
+  // make black rectangle (done to add opacity)
+  // invisible for filled buttons 
+  context.globalAlpha = .5;
+  setColor('black');
+  roundRect(context,
+    x,
+    y,
+    width,
+    height * tilesz,
+    radius,
+    true,
+    true);
+
+  //draw button's rectangle
+  setColor(color);
+  context.globalAlpha = 1;
+  context.strokeStyle = color;
+  context.lineWidth = tilesz / 10;
+  roundRect(context,
+    x,
+    y,
+    width,
+    height * tilesz,
+    radius,
+    filled,
+    !filled);
+
+  if (filled) {
+    // text color
+    setColor('black');
+
+  } else {
+    // text color
+    setColor(color);
+  }
+
+  //write button text
+  context.font = fontSize;
+  context.textAlign = 'center';
+  context.fillText(text,
+    width / 2 + x,
+    y + (height / 2 + .25)*tilesz);
+  setColor('black');
+  context.strokeStyle = 'black';
+  context.lineWidth = "2";
+
 }
 
 // --------------------------------------------------
@@ -231,10 +462,30 @@ function seedRandom() {
   }
 }
 
+
+function continuePlaying() {
+  if ( gameMode === EB || gameMode === PP ) {
+    reset();
+  } else if ( gameMode === MS ) {
+    currentMission += 1;
+    currentMission %= missions.length;
+    reset();
+  }
+}
+
+function clearButtons() {
+  console.log('Number of buttons: '+ buttons.length);
+  buttons = [];
+  
+}
+
+
 // --------------------------------------------------
 // For Game Modes
 var EB = 1 // everything bagel
 var AC = 2 // all clear mode
+var MS = 3 // play missions
+var PP = 4 // play practice
 
 var gameMode = EB; 
 
@@ -630,9 +881,54 @@ function drawSquare(x, y) {
   }
 }
 
+
+
+// --------------------------------------------------
+// Defining the Button prototype
+
+var Button = function(x, y, width, height, text, color, fn, filled, rounded) {
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
+  this.text = text;
+  this.color = color;
+  //this.img = new Image();
+  //this.img.src = imgurl;
+  this.fn = fn; //pass the button's click function
+
+  drawButton(this.x, this.y, this.width, height, this.color, this.text, filled, rounded);
+//  this.draw();
+};
+
+Button.prototype.mouse_down = function(mouseX, mouseY) {
+//y > CHButtonY && y < CHButtonY + BIGBUTTON*tilesz
+//  var hit = ( mouseX > canvas.width / 2 ) ? true : false;
+  var hit = ( mouseY > this.y && 
+    mouseY < this.y + this.height*tilesz &&
+    mouseX > this.x &&
+    mouseX < this.x + this.width
+        ) ? true : false;
+  if (hit == true) {
+    console.log('mouseX: ' + mouseX + ', x: '+this.x);
+    console.log('mouseY: ' + mouseY + ', y: '+this.y);
+    console.log(this.text + ' button pressed');
+    clearButtons();
+    drawScoreBar();
+    this.fn(); //run the button's function
+  }
+  return hit;
+};
+
+
 // --------------------------------------------------
 // Defining the Piece object
-function Piece(patterns, color, shapeNumber) {
+function Piece(patterns, color, shapeNumber, startY) {
+
+  if (typeof startY === 'undefined') {
+    startY = -4;
+  }
+
   this.pattern = patterns[0];
   this.patterns = patterns;
   this.patterni = 0;
@@ -641,22 +937,16 @@ function Piece(patterns, color, shapeNumber) {
   this.id = '' + pieceStatistics[shapeNumber] + shapeNumber;
 
   this.color = color;
-
-  this.x = BOARDWIDTH / 2 - parseInt(Math.ceil(this.pattern.length / 2), 10);
-  this.y = -4;
+  var centerX = (BOARDWIDTH % 2 === 0 ) ? 
+    BOARDWIDTH / 2 :
+    ( BOARDWIDTH + 1 ) / 2;
+  this.x = centerX - parseInt(Math.ceil(this.pattern.length / 2), 10);
+  this.y = startY;
   this.ghosty;
 }
 
 Piece.prototype.heldRecently = function () {
   this.recentlyHeld = 1;
-};
-
-Piece.prototype.notHeldRecently = function () { // might not need this
-  this.recentlyHeld = 0;
-};
-
-Piece.prototype.wasHeldRecenty = function () { // this does not seem to work properly
-  return this.recentlyHeld;
 };
 
 Piece.prototype.rotate = function (amount) {
@@ -989,12 +1279,22 @@ function handleTouchMove(evt) {
 document.addEventListener('click', handleClick, false);
 
 function handleClick(evt) {
-  var x = evt.clientX;
+  var x = evt.offsetX;
+  var cx = evt.clientX;
+  var y = evt.offsetY; 
+
+  console.log('offestX: '+x+ ' offestY: '+y);
+  var button_was_clicked = buttons.some(function(b) {
+    return b.mouse_down(x, y);
+  });
+
+  if (button_was_clicked) return; //return early because button was clicked
 
   if (gdone) {
-    reset();
+    //reset();
+
   }
-  if (x < wWidth / 2) {
+   else if (cx < wWidth / 2) {
     piece.rotate(3);
   } else {
     piece.rotate(1);
