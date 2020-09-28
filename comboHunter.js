@@ -39,7 +39,7 @@ mainmenuColor = blue;
 
 endlessColor = cyan;
 missionsColor = ambe;
-digColor = deor;
+practiceColor = deor;
 settingsColor = pink;
 controlsColor = gree;
 
@@ -116,8 +116,8 @@ var halfButtonFarX;
 var fontSize;
 var fontSizeSmall;
 
-var SMALLBUTTON = 2.5;
-var BIGBUTTON   = 4;
+var SMALLBUTTON = 2
+var BIGBUTTON   = 3;
 
 context.lineWidth = 1;
 context.sRect = function (x, y, w, h, l) {
@@ -234,7 +234,8 @@ var isPieceHeld;
 // For Starting and Ending of Games
 var WIN       = 1;
 var LOSE      = 0;
-var BADWIN    = -1
+var BADWIN    = 2
+var FINISHED  = 3
 var recentWin = false;
 
 var gameScreen;
@@ -266,11 +267,13 @@ function gameOver(result) {
   gameScreen = GAMEOVER;
 
   if (result === WIN) {
-    message = 'YOU WON'
+    message = 'You Won'
   } else if (result === LOSE) {
-    message = 'GAME OVER';
+    message = 'Game Over';
   } else if (result === BADWIN) {
-    message = 'TRY AGAIN';
+    message = 'Try Again';
+  } else if (result === FINISHED) {
+    message = 'Finished'
   }
   context.globalAlpha = 0.6;
   clearScreen();
@@ -290,7 +293,7 @@ function gameOver(result) {
         canvas.width / 2,
         (TOPSPACE + 2) * tilesz);
   context.textAlign = 'left';
-  if (gameMode === EL) {
+  if (gameMode === CH) {
     context.fillText('Combo: ' + combo,
         1 * tilesz,
         (TOPSPACE + 3.5) * tilesz);
@@ -308,13 +311,21 @@ function gameOver(result) {
     context.fillText('Rank: '+ rank,
         1 * tilesz,
         (TOPSPACE + 6) * tilesz);
+  } else if (gameMode === PP) {
+    context.fillText('Best Combo: ' + allTimeBestCombo,
+        1 * tilesz,
+        (TOPSPACE + 4) * tilesz);
+    rank = calculateRank(result);
+    context.fillText('Pieces: '+ numpieces,
+        1 * tilesz,
+        (TOPSPACE + 6) * tilesz);
   }
 
   if(result === WIN && gameMode === MS) { 
-      // moving this functionality to happen when user initiates it
-      //currentMission += 1;
-      //currentMission %= missions.length;
-    }
+    // moving this functionality to happen when user initiates it
+    // currentMission += 1;
+    // currentMission %= missions.length;
+  }
 
   drawContinueOptions(result);
 }
@@ -338,7 +349,7 @@ function drawContinueOptions(result) {
   }
 
   //continue button
-  if ( gameMode === EL || result === WIN ) {
+  if ( gameMode !== MS || result === WIN ) {
   buttons.push(new Button(wideButtonX,
     continueStart,
     wideButton,
@@ -744,13 +755,17 @@ function clearButtons() {
 }
 
 function startEndless() {
-  gameMode = EL; 
+  gameMode = CH; 
   reset();
 }
 
-
 function startMissions() {
   gameMode = MS; 
+  reset();
+}
+
+function startPractice() {
+  gameMode = PP; 
   reset();
 }
 
@@ -759,7 +774,7 @@ function replayMission() {
 }
 
 function continuePlaying() {
-  if ( gameMode === EL ) {
+  if ( gameMode === CH || gameMode === PP ) {
     reset();
   } else if ( gameMode === MS ) {
     currentMission += 1;
@@ -794,6 +809,7 @@ function gotoSettings() {
 function gotoMainMenu() {
   gameScreen = MAINMENU;
   drawMainMenu();
+
 }
 
 function drawMainMenu() {
@@ -802,35 +818,50 @@ function drawMainMenu() {
 
   var bButtonSpacing = (BIGBUTTON + 0.5) * tilesz;
   var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
-  var ELButtonY       = TOPSPACE * tilesz + pad;
-  var MSButtonY       = ELButtonY + bButtonSpacing;
-  var ControlButtonY  = MSButtonY + 2 * sButtonSpacing; 
-  var SettButtonY     = ControlButtonY + sButtonSpacing;
+
+  var menuStart = TOPSPACE * tilesz + pad;
+  var PPButtonY = menuStart;
+  var MSButtonY = menuStart + bButtonSpacing;
+  var CHButtonY = menuStart + bButtonSpacing * 2;  
+
+  var menuBottom      = canvas.height - 0.5 * tilesz;
+  var SettButtonY     = menuBottom - sButtonSpacing;
+  var ControlButtonY  = menuBottom - sButtonSpacing * 2;
 
   context.globalAlpha = 1.0;
 
-// test area --------------
 
-  // play endless button
+  // play practice button
   buttons.push(new Button(wideButtonX,
-    ELButtonY,
+    PPButtonY, 
     wideButton,
     BIGBUTTON,
-    'Play Endless',
-    endlessColor,
+    '49 Piece Practice',
+    practiceColor, 
     function() {
-      startEndless();
+      startPractice();
     }));
 
-  // play missions button
+  // missions mode button
   buttons.push(new Button(wideButtonX,
     MSButtonY, 
     wideButton,
     BIGBUTTON,
-    'Play Missions',
+    'Missions Mode',
     missionsColor, 
     function() {
       startMissions();
+    }));
+
+  // challenge mode button
+  buttons.push(new Button(wideButtonX,
+    CHButtonY,
+    wideButton,
+    BIGBUTTON,
+    'Challenge Mode',
+    endlessColor,
+    function() {
+      startEndless();
     }));
 
   //go to controls button
@@ -858,50 +889,41 @@ function drawMainMenu() {
     false));
 
 
-  //drawButton(DGButtonY,BIGBUTTON, digColor, 'Play Dig');
-
-  //shade out things that haven't been developed yet  
-  //shade out dig
-  /*
-  context.globalAlpha = 0.4;
-  setColor('black');
-  context.fRect(0.5 * tilesz,
-      DGButtonY,
-      canvas.width - (tilesz),
-      BIGBUTTON * tilesz);
-  context.globalAlpha = 1.0;
-  */
 }
 
 // --------------------------------------------------
 // For Game Modes
-var EL = 1 // play endless 
+var CH = 1 // play endless 
 var MS = 2 // play missions
+var PP = 3 // play practice
 
-var gameMode = EL;
+var gameMode = CH;
 
 // --------------------------------------------------
 // For Mission Mode
 
 var currentMission = 0;
 
+// exists for testing
 function toggleMissionMode() {
   if (gameMode !== MS) {
     gameMode = MS;
   } else {
-    gameMode = EL;
+    gameMode = CH;
   }
 }
 
 // --------------------------------------------------
 // For Scoring
 var combo = 0;
-var bcombo = 0;
+var allTimeBestCombo = 0;
+var localBestCombo = 0;
 
 var numpieces = 0;
 
 function initScores() {
   combo = 0;
+  localBestCombo = 0;
   numpieces = 0;
 }
 
@@ -914,10 +936,16 @@ function drawScoreBar() {
   setColor('black');
   context.textAlign = 'center';
   context.font = fontSize;
-  if (gameMode === EL) {
-    context.fillText('Combo: ' + combo + ' Best: ' + bcombo,
-            canvas.width/2,
-            TOPSPACE * tilesz / 1.5);
+  if (gameMode === CH ) {
+    context.fillText(
+      'Combo: ' + combo + ' Best: ' + allTimeBestCombo,
+      canvas.width/2,
+      TOPSPACE * tilesz / 1.5);
+  } else if (gameMode === PP) {
+    context.fillText(
+      'Combo: ' + combo + ' Best: ' + localBestCombo,
+      canvas.width/2,
+      TOPSPACE * tilesz / 1.5);
   } else if (gameMode === MS) {
     var readableMission = currentMission + 1;
     context.fillText('Combo: ' + combo + ' Mission: ' + readableMission,
@@ -929,8 +957,12 @@ function drawScoreBar() {
 // --------------------------------------------------
 // For Piece Preview
 function updatePreview() {
-  if (gameMode === EL) {
+  if (gameMode === CH) {
     if (bag.length < PREVIEW) {
+      makeAndShuffleBag();
+    }
+  } else if (gameMode === PP) {
+    if (bag.length < PREVIEW && numpieces < 42) {
       makeAndShuffleBag();
     }
   }
@@ -1054,10 +1086,13 @@ function nextPiece() {
         recentWin = false;
         gameOver(BADWIN);
       }
+    } else if (gameMode === PP) {
+      drawScoreBar();
+      gameOver(FINISHED);
     }
   }
-
 }
+
 bagSize = 1;
 function initRandomizer() {
   bag = [];
@@ -1160,7 +1195,7 @@ var Button = function(x, y, width, height, text, color, fn, filled, rounded) {
 };
 
 Button.prototype.mouse_down = function(mouseX, mouseY) {
-//y > ELButtonY && y < ELButtonY + BIGBUTTON*tilesz
+//y > CHButtonY && y < CHButtonY + BIGBUTTON*tilesz
 //  var hit = ( mouseX > canvas.width / 2 ) ? true : false;
   var hit = ( mouseY > this.y && 
     mouseY < this.y + this.height*tilesz &&
@@ -1321,6 +1356,7 @@ Piece.prototype.lock = function () {
         continue;
       }
 
+      // piece over the top of the screen
       if (this.y + iy < 0) {
         // Game ends!
         recentWin = false;
@@ -1356,17 +1392,22 @@ Piece.prototype.lock = function () {
 
   if (nlines > 0) {
     combo += 1;
-    if (combo > bcombo) {
-      bcombo = combo;
+    if (combo > localBestCombo) {
+      localBestCombo = combo;
     }
+    if (localBestCombo > allTimeBestCombo) {
+      allTimeBestCombo = localBestCombo;
+    }
+    
 
     //drawScoreBar();
     drawBoard();
   } else { // no lines were cleared
-    if (combo > 0) { // but we were in the middle of combo
+    if (combo > 0 && gameMode !== PP) { // but we were in the middle of combo
       recentWin = false;
       gameOver(LOSE);
     }
+    combo = 0;
   }
 };
 
@@ -1626,7 +1667,8 @@ function key(k) {
   if (k === 82) { // Player pressed r
     reset();
   }
-  //mission navigation is prettty buggy right now
+  // mission navigation is prettty buggy right now
+  // exists for testing
   if (k === 69) { // Player pressed e
     if (gameMode = MS) {
       //if (currentMission !== 0) {
@@ -1647,6 +1689,7 @@ function key(k) {
   }
   if (k === 77) { // Player pressed m
     // toggle if missions are being played or not
+    // exists for testing purposes
     toggleMissionMode();
     reset();
   }
@@ -1792,9 +1835,10 @@ function initGame() {
   piece = null;
   initCanvas();
   initScores();
+
   board = initBoard(BOARDHEIGHT, BOARDWIDTH);
   initSideBoard();
-  if (gameMode === EL) {
+  if (gameMode !== MS) {
     initRandomizer();
   } else {
     bag = missions[currentMission][0].slice().reverse();
