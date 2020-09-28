@@ -3,6 +3,8 @@ var BLOCK = 2;
 var SILVER = 7;
 var GOLD = 8;
 
+var MOBILE = 0;
+var DESKTOP = 1;
 
 // global button list 
 var buttons = [];
@@ -30,9 +32,9 @@ replayColor = lime;
 returnColor = blue;
 mainmenuColor = blue;
 
-endlessColor = cyan;
+endlessColor = deor;
 missionsColor = ambe;
-practiceColor = deor;
+marathonColor = cyan;
 settingsColor = pink;
 controlsColor = gree;
 
@@ -133,8 +135,8 @@ function initCanvas() {
   wHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
   wWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   tilesz = parseInt(wHeight * BOARDPERCENT / BOARDHEIGHT);
-  fontSize      = '' + tilesz + 'px Arial';
-  fontSizeSmall = '' + tilesz * .6 + 'px Arial';
+  fontSize      = '' + 1.25 * tilesz + 'px Arial';
+  fontSizeSmall = '' + tilesz + 'px Arial';
   thinLine = 0.0125;
   thickLine = 0.25;
   boardX = LEFTSPACE + 1 * thickLine;
@@ -354,7 +356,7 @@ function drawContinueOptions(result) {
     mainmenuText,
     mainmenuColor,
     function() {
-    //  gotoMainMenu();
+      gotoMainMenu();
     },
     false));
 
@@ -462,9 +464,163 @@ function seedRandom() {
   }
 }
 
+function scoreBarMessage( message ) {
+  setColor(topBarColor);
+  context.fRect(0, 0,
+    canvas.width,
+    TOPSPACE*tilesz-1);
+  //ctx.font = fontSize;
+  setColor('black');
+  context.textAlign = 'center';
+  context.font = fontSize;
+  context.fillText(message,
+    canvas.width/2,
+    TOPSPACE * tilesz / 1.5);
+}
 
+
+function drawControls(platform) {
+
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+
+  var textHeight = 1.5 * tilesz;
+  var textOffset = 0;
+  var startY = (TOPSPACE + 0.5) * tilesz;
+  var basAText = [['Swipe Left:',
+                   'Swipe Right:',
+                   'Tap Left of Center:',
+                   'Tap Right of Center:'],
+                  ['Left Arrow:',
+                   'Right Arrow:',
+                   '"S" or Up Arrow:',
+                   '"D" Key:']];
+  var basRText = ['slide left',
+                  'slide right',
+                  'rotate left',
+                  'rotate right'];
+  var advAText = [[ 'Swipe Up:',
+                    'Swipe Down:'],
+                  [ '"A" Key:',
+                    'Space Button:']];
+  var advRText = ['store piece',
+                  'drop piece'];
+  var platformsList = [ 'Mobile',
+                        'Computer'];
+
+  scoreBarMessage('Controls: ' + platformsList[platform]);
+
+  // clear the board 
+  clearScreen();
+
+  // draw  controls card
+  setColor(cardColor);
+  roundRect(context,
+    0.5 * tilesz,
+    startY,
+    canvas.width - (tilesz),
+    (basAText[platform].length + advAText[platform].length + 1) * textHeight + tilesz*4,
+    0,
+    true,
+    false);
+  context.font = fontSizeSmall;
+
+  // write basic controls
+  setColor('black');
+  startY += textHeight;
+  for (let i = 0; i < basAText[platform].length; i++) {
+    textOffset = 1 * tilesz;
+    context.textAlign = 'left';
+    context.fillText(basAText[platform][i],
+        textOffset,
+        startY + textHeight * (i));
+    context.textAlign = 'right';
+    context.fillText(basRText[i],
+        canvas.width - textOffset,
+        startY + textHeight * (i));
+  }
+  
+  // draw piece window
+  setColor('black');
+  var pWindowWidth = 9;
+  roundRect(context,
+    (canvas.width - pWindowWidth*tilesz) / 2 - thickLine*tilesz,
+    startY + (basAText[platform].length)*textHeight - tilesz*.5,
+    (pWindowWidth + thickLine*2)*tilesz,
+    4*tilesz,
+    0,
+    true,
+    false);
+
+  startY += (basAText[platform].length -.5) * textHeight + 4*tilesz;
+
+  var platformToggleX = startY + (advAText[platform].length + .5) * textHeight;
+
+  // write advanced controls
+  setColor('black');
+  startY += textHeight;
+  for (let i = 0; i < advAText[platform].length; i++) {
+    textOffset = 1 * tilesz;
+    context.textAlign = 'left';
+    context.fillText(advAText[platform][i],
+        textOffset,
+        startY + textHeight * (i));
+    context.textAlign = 'right';
+    context.fillText(advRText[i],
+        canvas.width - textOffset,
+        startY + textHeight * (i));
+  }
+
+  initControlsTest();
+
+  var mobileActive = (platform === MOBILE) ? true : false;
+  buttons.push(new Button(wideButtonX,
+    platformToggleX,
+    halfButton,
+    SMALLBUTTON * .8,
+    platformsList[0],
+    cardColor,
+    function() {
+      gotoControls(MOBILE);
+    },
+    mobileActive,
+    false));
+
+  buttons.push(new Button(halfButtonFarX,
+    platformToggleX,
+    halfButton,
+    SMALLBUTTON * .8,
+    platformsList[1],
+    cardColor,
+    function() {
+      gotoControls(DESKTOP);
+    },
+    !mobileActive,
+    false));
+
+
+  startY = canvas.height - sButtonSpacing;
+  buttons.push(new Button(wideButtonX,
+    startY,
+    wideButton,
+    SMALLBUTTON,
+    "Main Menu",
+    mainmenuColor,
+    function() {
+      gotoMainMenu();
+    }));
+
+
+
+
+}
+
+function startPlaying(mode) {
+  gameMode = mode; 
+  reset();
+}
+// used for mission management mainly
 function continuePlaying() {
-  if ( gameMode === EB || gameMode === PP ) {
+  if ( gameMode !== MS ) {
     reset();
   } else if ( gameMode === MS ) {
     currentMission += 1;
@@ -480,14 +636,112 @@ function clearButtons() {
 }
 
 
+
+function gotoMainMenu() {
+  gameScreen = MAINMENU;
+  drawMainMenu();
+}
+
+function gotoControls(platform) {
+  gameScreen = CONTROLS;
+  drawControls(platform);
+}
+
+
+function drawMainMenu() {
+  var pad = tilesz *.5;
+  clearScreen();
+
+  var bButtonSpacing = (BIGBUTTON + 0.5) * tilesz;
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+
+  var menuStart = TOPSPACE * tilesz + pad;
+  var MAButtonY = menuStart;
+  var MSButtonY = menuStart + bButtonSpacing;
+  var CHButtonY = menuStart + bButtonSpacing * 2;  
+
+  var menuBottom      = canvas.height - 0.5 * tilesz;
+  var SettButtonY     = menuBottom - sButtonSpacing;
+  var ControlButtonY  = menuBottom - sButtonSpacing * 2;
+
+  context.globalAlpha = 1.0;
+
+  numpieces = 0;
+
+  // play marathon button
+  buttons.push(new Button(wideButtonX,
+    MAButtonY, 
+    wideButton,
+    BIGBUTTON,
+    'Marathon',
+    marathonColor, 
+    function() {
+      startPlaying(MA);
+    }));
+
+  /*
+  // missions mode button
+  buttons.push(new Button(wideButtonX,
+    MSButtonY, 
+    wideButton,
+    BIGBUTTON,
+    'Missions Mode',
+    missionsColor, 
+    function() {
+      startMissions();
+    }));
+    */
+  
+  /*
+  // challenge mode button
+  buttons.push(new Button(wideButtonX,
+    CHButtonY,
+    wideButton,
+    BIGBUTTON,
+    'Challenge Mode',
+    endlessColor,
+    function() {
+     // 
+    }));
+    */
+
+  //go to controls button
+  buttons.push(new Button(wideButtonX,
+    ControlButtonY, 
+    wideButton,
+    SMALLBUTTON,
+    'Controls',
+    controlsColor, 
+    function() {
+      gotoControls(DESKTOP);
+    },
+    false));
+
+  /*
+  // go to settings button
+  buttons.push(new Button(wideButtonX,
+    SettButtonY, 
+    wideButton,
+    SMALLBUTTON,
+    'Settings',
+    settingsColor, 
+    function() {
+   //   gotoSettings();
+    },
+    false));
+  */
+
+
+}
+
 // --------------------------------------------------
 // For Game Modes
-var EB = 1 // everything bagel
+var MA = 1 // marathon 
 var AC = 2 // all clear mode
 var MS = 3 // play missions
 var PP = 4 // play practice
 
-var gameMode = EB; 
+var gameMode = MA; 
 
 // --------------------------------------------------
 // For Scoring
@@ -507,22 +761,23 @@ function initScores() {
   numpieces = 0;
 }
 
-function drawScoreBar() {
+function drawStatusBar() {
   setColor(menuColor);
   context.fRect(0, 0,
     canvas.width,
     TOPSPACE*tilesz-1);
   setColor('black');
+  context.textAlign = 'left';
   if(gameMode === AC) {
-    context.font = '' + 1.25 * tilesz + 'px Arial';
+    context.font = fontSize;
     context.fillText('All Clears: ' + acCount,
             tilesz,
             2.5 * tilesz);
     context.fillText(' Games: ' + gamesCount,
             canvas.width/2 + tilesz,
             2.5 * tilesz);
-  } else if (gameMode === EB) {
-    context.font = '' + 1.25 * tilesz + 'px Arial';
+  } else if (gameMode === MA) {
+    context.font = fontSize;
     context.fillText('Lines: ' + lines,
             tilesz,
             1.5 * tilesz);
@@ -638,7 +893,7 @@ function newPieceDet(blockNumber) {
   currentPieceNumber = blockNumber;
   updateStats(blockNumber);
   updatePreview();
-  drawScoreBar();
+  drawStatusBar();
   return new Piece(p[0], p[1], blockNumber);
 }
 
@@ -803,26 +1058,28 @@ function checkForAllClear() {
   }
   if (empty) {
     acCount += 1;
-    drawScoreBar();
+    drawStatusBar();
     gameOver(WIN);
   }
 }
 
 // --------------------------------------------------
 
-function initBoard() {
-  for (let r = 0; r < BOARDHEIGHT; r++) {
+function initBoard(rows, cols) {
+  var board = [];
+  for (let r = 0; r < rows; r++) {
     board[r] = [];
-    for (let c = 0; c < BOARDWIDTH; c++) {
+    for (let c = 0; c < cols; c++) {
       board[r][c] = ['', -1];
     }
   }
+  return board;
 }
 
 function holdPiece() {
   if (!piece.recentlyHeld) {
-    if (isPieceHeld === 0) { // ie no piece held
-      isPieceHeld = 1;
+    if (!isPieceHeld) { // ie no piece held
+      isPieceHeld = true;
       heldPieceNumber = currentPieceNumber;
       heldPiece = pieces[heldPieceNumber];
       piece.undraw();
@@ -850,25 +1107,27 @@ function drawHold() {
     (TOPSPACE + BOARDHEIGHT - 4) * tilesz,
     RIGHTSPACE * tilesz,
     4.5 * tilesz);
-  setColor(heldPiece[1]);
-  var size = heldPiece[0][0].length;
-  var hAdjustment = 1 - 4;
-  var wAdjustment = 1;
-  if (heldPieceNumber === 0) {
-    hAdjustment = -0.5 - 4.5;
-    wAdjustment = 0.5;
-  } else if (heldPieceNumber === 3) {
-    hAdjustment -= 1;
-    wAdjustment = 0.5;
-  } else if (heldPieceNumber === 4 || heldPieceNumber === 6) {
-    hAdjustment -= 1;
-  }
+  if (isPieceHeld) {
+    setColor(heldPiece[1]);
+    var size = heldPiece[0][0].length;
+    var hAdjustment = 1 - 4;
+    var wAdjustment = 1;
+    if (heldPieceNumber === 0) {
+      hAdjustment = -0.5 - 4.5;
+      wAdjustment = 0.5;
+    } else if (heldPieceNumber === 3) {
+      hAdjustment -= 1;
+      wAdjustment = 0.5;
+    } else if (heldPieceNumber === 4 || heldPieceNumber === 6) {
+      hAdjustment -= 1;
+    }
 
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      if (heldPiece[0][0][y][x] !== 0) {
-        drawSquare(sideBarX + x + wAdjustment,
-          TOPSPACE + y + BOARDHEIGHT + hAdjustment);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (heldPiece[0][0][y][x] !== 0) {
+          drawSquare(sideBarX + x + wAdjustment,
+            TOPSPACE + y + BOARDHEIGHT + hAdjustment);
+        }
       }
     }
   }
@@ -914,7 +1173,7 @@ Button.prototype.mouse_down = function(mouseX, mouseY) {
     console.log('mouseY: ' + mouseY + ', y: '+this.y);
     console.log(this.text + ' button pressed');
     clearButtons();
-    drawScoreBar();
+    drawStatusBar();
     this.fn(); //run the button's function
   }
   return hit;
@@ -1070,7 +1329,7 @@ Piece.prototype.lock = function () {
       board[this.y + iy][this.x + ix] = [this.color, this.id];
     }
   }
-  if (gameMode === EB) {
+  if (gameMode === MA) {
     checkForSquares();
   }
   var gsBonus = 0;
@@ -1189,12 +1448,18 @@ Piece.prototype.draw = function (context) {
 };
 
 Piece.prototype.drawGhost = function () {
+  if (gameScreen === CONTROLS) {
+    return;
+  }
   context.globalAlpha = 0.5;
   this._fillGhost(this.color);
   context.globalAlpha = 1.0;
 };
 
 Piece.prototype.undrawGhost = function () {
+  if (gameScreen === CONTROLS) {
+    return;
+  }
   this._fillGhost(clear);
 };
 
@@ -1243,7 +1508,7 @@ function handleTouchMove(evt) {
   if (!xDown || !yDown) {
     return;
   }
-  if (gdone) {
+  if (gameScreen != INPLAY && gameScreen != CONTROLS) {
     return;
   }
 
@@ -1290,14 +1555,17 @@ function handleClick(evt) {
 
   if (button_was_clicked) return; //return early because button was clicked
 
-  if (gdone) {
-    //reset();
 
-  }
-   else if (cx < wWidth / 2) {
-    piece.rotate(3);
-  } else {
-    piece.rotate(1);
+
+
+
+
+  if (gameScreen === INPLAY) {  
+    if (cx < wWidth / 2) {
+      piece.rotate(3);
+    } else {
+      piece.rotate(1);
+    }
   }
 };
 
@@ -1317,8 +1585,6 @@ function key(k) {
   if (k === 38) { // Player pressed up
     piece.rotate(3);
     dropStart = Date.now();
-  } else if (k === 40) { // Player holding down
-    piece.down();
   } else if (k === 37) { // Player holding left
     piece.moveLeft();
   } else if (k === 39) { // Player holding right
@@ -1329,11 +1595,19 @@ function key(k) {
   } else if (k === 68) { // Player pressed d
     piece.rotate(1);
     dropStart = Date.now();
+  } 
+
+  if (gameScreen != INPLAY) {
+    return;
+  } 
+
+  if (k === 40) { // Player holding down
+    piece.down();
+  } else if (k === 65) { // Player pressed a
+    holdPiece();
   } else if (k === 70) { // Player pressed f
     piece.rotate(2);
     dropStart = Date.now();
-  } else if (k === 65) { // Player pressed a
-    holdPiece();
   } else if (k === 32) { // Player pressed space
     while (piece.down() === 0) {
       continue;
@@ -1391,13 +1665,13 @@ function initSideBoard() {
     canvas.height);
   
   drawBorders( '#99D3DF' );
-  drawScoreBar();
+  drawStatusBar();
   // line seperating preview from hold
   //context.fillStyle = '#99D3DF';
 }
 
 function main() {
-  if (!gdone) {
+  if (gameScreen == INPLAY) {
     var now = Date.now();
     var delta = now - dropStart;
     if (piece === null) {
@@ -1415,22 +1689,47 @@ function main() {
   }
 }
 
+function initControlsTest() {
+  piece = null;
+  BOARDWIDTH = 9; // don't like that I'm changing something that was supposed to be constant
+  board = initBoard(BOARDHEIGHT, BOARDWIDTH);
+  boardX = (canvas.width / tilesz - BOARDWIDTH) / 2;
+  isPieceHeld = true;
+  done = false;
+  gdone = false;
+  //recentWin = false;
+  gameScreen = CONTROLS;
+ // drawMainMenu();
+ // gameScreen = MAINMENU;
+  //dropStart = Date.now();
+  var p = pieces[5];
+  piece = new Piece(p[0], p[1],  5, 8);
+  piece.draw(context);
+  //boardX = ( canvas.width - BOARDWIDTH * tilesz ) / 2;
+
+}
+
+
 function initGame() {
+
   initCanvas();
   initScores();
-  initBoard();
+
+  board = initBoard(BOARDHEIGHT, BOARDWIDTH);
   initStats();
   initSideBoard();
   initRandomizer();
-  isPieceHeld = 0;
+  isPieceHeld = false;
   done = false;
   gdone = false;
   speed = 0;
+  gameScreen = INPLAY;
   dropStart = Date.now();
   piece = null;
 }
 
-function playEB() {
+// called on html page onload
+function play() {
   BOARDWIDTH = 10;
   BOARDHEIGHT = 20;
   LEFTSPACE = 2;
@@ -1440,10 +1739,12 @@ function playEB() {
   PREVIEW = 5;
   BOTTOMSPACE = 1;
 
-  gameMode = EB;
+  gameMode = MA;
   initGame();
   drawBoard();
   main();
+  drawMainMenu();
+  gameScreen = MAINMENU;
 }
 
 function playAC() {
