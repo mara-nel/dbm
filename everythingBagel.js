@@ -8,6 +8,7 @@ var DESKTOP = 1;
 
 // global button list 
 var buttons = [];
+var radioLists = [];
 
 // --------------------------------------------------
 // colors 
@@ -40,6 +41,12 @@ controlsColor = gree;
 
 var clear = 'black';
 menuColor = teal;
+
+var theme;
+var TROPICAL = 0;
+var TRANS = 1;
+
+
 
 var pieces = [
   [I, cyan],
@@ -81,15 +88,14 @@ var keydownIntervals = {};
 
 var board = [];
 var bag = [];
-var bagText = document.getElementById('bagsize');
 
 // --------------------------------------------------
 // For sizing and graphics
 var canvas = document.getElementById('board');
 var context = canvas.getContext('2d');
 //var clear = window.getComputedStyle(canvas).getPropertyValue('background-color');
-var gridChoice = document.getElementsByName('grids');
-var gridsOn = 1;
+//var gridChoice = document.getElementsByName('grids');
+var gridsOn = false;
 
 var BOARDWIDTH = 10;
 var BOARDHEIGHT = 20;
@@ -147,11 +153,6 @@ function initCanvas() {
   wideButtonX = .5 * tilesz;
   halfButton = (canvas.width - tilesz) / 2;
   halfButtonFarX = canvas.width/2;
-  for (let i = 0; i < gridChoice.length; i++) {
-    if (gridChoice[i].checked) {
-      gridsOn = parseInt(gridChoice[i].value);
-    }
-  }
 }
 
 function setColor(color) {
@@ -228,7 +229,6 @@ var isPieceHeld;
 
 // --------------------------------------------------
 // For Starting and Ending of Games
-document.getElementById('newGame').onclick = reset;
 var WIN   = 1;
 var LOSE  = 0;
 
@@ -356,7 +356,7 @@ function drawContinueOptions(result) {
     mainmenuText,
     mainmenuColor,
     function() {
-      gotoMainMenu();
+      gotoScreen(MAINMENU);
     },
     false));
 
@@ -606,18 +606,119 @@ function drawControls(platform) {
     "Main Menu",
     mainmenuColor,
     function() {
-      gotoMainMenu();
+      gotoScreen(MAINMENU);
     }));
-
-
-
 
 }
 
-function startPlaying(mode) {
+function drawSettings() {
+
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+
+  var textHeight = 1.75 * tilesz;
+  var textOffset = 0;
+  var startY = (TOPSPACE + 0.5) * tilesz;
+  var randomizerText = ['Randomizer:',
+                        '1 Bag',
+                        '2 Bag',
+                        '7 Bag',
+                        'Random'];
+
+  var themeText = [ 'Theme:',
+                    'Tropical'];
+                   // 'Trans Flag'];
+  
+  var gridlines = [ 'Gridlines:',
+                    'On',
+                    'Off'];
+
+
+
+  clearScreen();
+
+
+  //draw card
+  setColor(cardColor);
+  context.fRect(0.5 * tilesz,
+        startY,
+        canvas.width - (tilesz),
+        (randomizerText.length + gridlines.length) * textHeight + tilesz);
+  context.font = fontSize;
+  setColor('black');
+
+  startY += textHeight;
+
+  console.log('bag size: '+ bagSize);
+  //very hacky
+  var bagSizeToSelection = [4,1,2,0,0,0,0,3];
+  radioLists.push(new RadioList(tilesz,
+    startY,
+    canvas.width - (2 * tilesz),
+    textHeight,
+    randomizerText,
+    function() {
+      var selectionToBagSize = [1,2,7,0];
+      bagSize = selectionToBagSize[this.selection-1];
+      initRandomizer();
+      console.log('bag size: '+ bagSize);
+    },
+    true,
+    bagSizeToSelection[bagSize]));
+  
+  startY += textHeight * (randomizerText.length);
+
+  var gridsToSelection = gridsOn ? 1 : 2;
+  radioLists.push(new RadioList(tilesz,
+    startY,
+    canvas.width - (tilesz),
+    textHeight,
+    gridlines,
+    function() {
+      gridsOn = (this.selection === 1) ; 
+    },
+    true,
+    gridsToSelection));
+/*
+  radioLists.push(new RadioList(tilesz,
+    startY,
+    canvas.width - (tilesz),
+    textHeight,
+    themeText,
+    function() {
+     // 
+    },
+    true,
+    1));
+    */
+
+  startY = canvas.height - sButtonSpacing;
+  buttons.push(new Button(wideButtonX,
+    startY,
+    wideButton,
+    SMALLBUTTON,
+    "Main Menu",
+    mainmenuColor,
+    function() {
+      gotoScreen(MAINMENU);
+    }));
+
+  // highlight current settings
+  // hardcoding in 1 bag and tropical
+  startY = (TOPSPACE + 0.5) * tilesz;
+  //very hacky
+  var bagSizeMap = [4,1,2,0,0,0,0,3];
+  var themeMap = [6,7];
+}
+
+
+
+
+function playMode(mode) {
+  radioLists = [];
   gameMode = mode; 
   reset();
 }
+
 // used for mission management mainly
 function continuePlaying() {
   if ( gameMode !== MS ) {
@@ -636,16 +737,22 @@ function clearButtons() {
 }
 
 
-
-function gotoMainMenu() {
-  gameScreen = MAINMENU;
-  drawMainMenu();
+function gotoScreen(screen) {
+  radioLists = [];
+  gameScreen = screen;
+  if (screen === SETTINGS ) {
+    drawSettings();
+  } else if (screen == MAINMENU) {
+    drawMainMenu();
+  }
 }
+
 
 function gotoControls(platform) {
   gameScreen = CONTROLS;
   drawControls(platform);
 }
+
 
 
 function drawMainMenu() {
@@ -676,7 +783,7 @@ function drawMainMenu() {
     'Marathon',
     marathonColor, 
     function() {
-      startPlaying(MA);
+      playMode(MA);
     }));
 
   /*
@@ -688,7 +795,7 @@ function drawMainMenu() {
     'Missions Mode',
     missionsColor, 
     function() {
-      startMissions();
+      playMode(MS);
     }));
     */
   
@@ -717,7 +824,6 @@ function drawMainMenu() {
     },
     false));
 
-  /*
   // go to settings button
   buttons.push(new Button(wideButtonX,
     SettButtonY, 
@@ -726,10 +832,9 @@ function drawMainMenu() {
     'Settings',
     settingsColor, 
     function() {
-   //   gotoSettings();
+      gotoScreen(SETTINGS);
     },
     false));
-  */
 
 
 }
@@ -841,7 +946,7 @@ function drawPreview() {
 
 // --------------------------------------------------
 // For Randomizer
-var bagSize; // this should change based on what randomizer is chosen
+var bagSize = 7; // this should change based on what randomizer is chosen
 function getRandomInt(max) {
   return Math.floor(jsf() * Math.floor(max));
 }
@@ -912,18 +1017,6 @@ function updatePieceCount() {
   speedUp();
 }
 
-var possibleRandomizer = document.getElementsByName('randomizer');
-bagSize = 0;
-function initRandomizer() {
-  bag = [];
-  for (let i = 0; i < possibleRandomizer.length; i++) {
-    if (possibleRandomizer[i].checked) {
-      bagSize = possibleRandomizer[i].value;
-    }
-  }
-
-  bagText.textContent = 'Current Bag Size: ' + bagSize;
-}
 
 // --------------------------------------------------
 // For speeding up blocks falling
@@ -1065,6 +1158,25 @@ function checkForAllClear() {
 
 // --------------------------------------------------
 
+bagSize = 0;
+
+function initRandomizer() {
+  bag = [];
+  makeAndShuffleBag();
+}
+/*
+function initRandomizer() {
+  bag = [];
+  for (let i = 0; i < possibleRandomizer.length; i++) {
+    if (possibleRandomizer[i].checked) {
+      bagSize = possibleRandomizer[i].value;
+    }
+  }
+
+  bagText.textContent = 'Current Bag Size: ' + bagSize;
+}
+*/
+
 function initBoard(rows, cols) {
   var board = [];
   for (let r = 0; r < rows; r++) {
@@ -1135,7 +1247,7 @@ function drawHold() {
 
 function drawSquare(x, y) {
   context.fRect(x * tilesz, y * tilesz, tilesz, tilesz);
-  if (gridsOn === 1) {
+  if (gridsOn) {
     context.sRect(x * tilesz, y * tilesz, tilesz, tilesz, thinLine * tilesz);
   }
 }
@@ -1169,8 +1281,6 @@ Button.prototype.mouse_down = function(mouseX, mouseY) {
     mouseX < this.x + this.width
         ) ? true : false;
   if (hit == true) {
-    console.log('mouseX: ' + mouseX + ', x: '+this.x);
-    console.log('mouseY: ' + mouseY + ', y: '+this.y);
     console.log(this.text + ' button pressed');
     clearButtons();
     drawStatusBar();
@@ -1178,6 +1288,115 @@ Button.prototype.mouse_down = function(mouseX, mouseY) {
   }
   return hit;
 };
+
+
+// --------------------------------------------------
+// Defining the Radio Button List prototype
+
+var RadioList = function(x, y, width, lineHeight, options, fn, titled, selectedOption) {
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.lineHeight = lineHeight;
+  this.options = options;
+  this.fn = fn; //pass the button's click function
+  this.titled = titled;
+  this.selectedOption = selectedOption;
+
+  this.height = options.length * lineHeight;
+
+  this.draw();
+  this.new_selection(selectedOption);
+
+};
+
+RadioList.prototype.mouse_down = function(mouseX, mouseY) {
+
+  var verticalAdjustment = .75 * this.lineHeight;
+  var y = this.y - verticalAdjustment;
+
+  var relativeY = mouseY - y;
+  var hit = ( relativeY > 0 && 
+    relativeY < this.height &&
+    mouseX > this.x &&
+    mouseX < this.x + this.width
+        ) ? true : false;
+
+  var selected = -1;
+
+  if (hit === true) {
+    selected = Math.floor( relativeY / this.lineHeight);
+    if (selected === 0 && this.titled) {
+      return hit;
+    }
+    this.new_selection(selected);
+    this.fn(); //run the button's function
+    console.log("Selected option: "+selected);
+
+  }
+  return hit;
+};
+
+RadioList.prototype.draw = function() {
+
+  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var textOffset = 0;
+
+  context.textAlign = 'left';
+  for (let i = 0; i < this.options.length; i++) {
+    if (i === 0 && this.titled) {
+        textOffset = 0;
+    } else {
+      textOffset = 1.5 * tilesz;
+    }
+    setColor('black');
+    context.fillText(this.options[i],
+        this.x + textOffset,
+        this.y + this.lineHeight * i );
+  }
+  //drawRectangle(this.x,this.y-.75*this.lineHeight,this.width,this.height);
+}
+
+RadioList.prototype.new_selection = function(selected) {
+  this.selection = selected;
+  for (let i = 0; i < this.options.length; i++) {
+    if (i === 0 && this.titled) {
+        textOffset = 0;
+    } else {
+      textOffset = 1.5 * tilesz;
+      drawCircle(context,
+        this.x + 0.5 * tilesz, 
+        this.y + this.lineHeight * (i-.2),
+        tilesz/2,
+        cardColor,
+        true,
+        true);
+    }
+    if (i === selected) {
+      drawCircle(context,
+        this.x + 0.5 * tilesz, 
+        this.y + this.lineHeight * (i-.2),
+        tilesz/3,
+        mainmenuColor,
+        true,
+        false);
+    }
+  }
+}
+
+
+function drawCircle(ctx, x, y, radius, color, filled, outlined) {
+  setColor(color);
+  ctx.lineWidth = 2 ;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  if (filled) {
+    ctx.fill();
+  } 
+  if (outlined) { 
+    ctx.stroke(); 
+  }
+}
 
 
 // --------------------------------------------------
@@ -1548,19 +1767,17 @@ function handleClick(evt) {
   var cx = evt.clientX;
   var y = evt.offsetY; 
 
-  console.log('offestX: '+x+ ' offestY: '+y);
   var button_was_clicked = buttons.some(function(b) {
     return b.mouse_down(x, y);
   });
 
+  var radio_list_was_clicked = radioLists.some(function(r) {
+    return r.mouse_down(x, y);
+  });
+
   if (button_was_clicked) return; //return early because button was clicked
 
-
-
-
-
-
-  if (gameScreen === INPLAY) {  
+  if (gameScreen === INPLAY || gameScreen == CONTROLS) {
     if (cx < wWidth / 2) {
       piece.rotate(3);
     } else {
@@ -1568,6 +1785,20 @@ function handleClick(evt) {
     }
   }
 };
+
+
+
+function drawRectangle(x,y,width,height,color) {
+
+  context.globalAlpha = 1.0;
+  context.beginPath();
+  context.lineWidth = "2";
+  context.strokeStyle = color;
+  context.rect(x, y, width, height); 
+  context.stroke();
+
+}
+
 
 // --------------------------------------------------
 function key(k) {
@@ -1739,6 +1970,7 @@ function play() {
   PREVIEW = 5;
   BOTTOMSPACE = 1;
 
+  bagSize = 7;
   gameMode = MA;
   initGame();
   drawBoard();
@@ -1756,6 +1988,7 @@ function playAC() {
   BOARDPERCENT = 0.6;
   PREVIEW = 3;
 
+  bagSize = 1;
   gameMode = AC;
   initGame();
   drawBoard();

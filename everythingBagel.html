@@ -22,21 +22,11 @@
     <div class="centered">
       <canvas id="board">
       </canvas>
-      <form id="randomizerChoice">
-        <input type="radio" name="randomizer" value="1">1 bag
-        <input type="radio" name="randomizer" value="2">2 bag
-        <input type="radio" name="randomizer" value="7"checked>7 bag  
-        <input type="radio" name="randomizer" value="0">random
-      </form>
+      <div>
       <label>Random Seed: <input id="theSeed" value=""></label>
       <button type="button" onclick="seedRandom()">Seed and Reset</button>
+      </div>
       <span id="seedCheck"></span>
-      <form id="gridOn">Gridlines:
-        <input type="radio" name="grids" value="1">on
-        <input type="radio" name="grids" value="0" checked>off
-      </form>
-      <span id="bagsize"></span>
-      <button type="button" id="newGame">New Game</button>
     </div>
     <script src="bricks.js"></script>
     <script src="everythingBagel.js"></script>
