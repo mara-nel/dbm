@@ -402,7 +402,7 @@ function drawContinueOptions(result) {
     mainmenuText,
     mainmenuColor,
     function() {
-      gotoMainMenu();
+      gotoScreen(MAINMENU);
     },
     false));
 
@@ -599,14 +599,10 @@ function drawControls(platform) {
     "Main Menu",
     mainmenuColor,
     function() {
-      gotoMainMenu();
+      gotoScreen(MAINMENU);
     }));
 
-
-
-
 }
-
 
 function drawSettings() {
 
@@ -667,7 +663,6 @@ function drawSettings() {
     },
     true,
     1));
-    
 
   startY = canvas.height - sButtonSpacing;
   buttons.push(new Button(wideButtonX,
@@ -677,7 +672,7 @@ function drawSettings() {
     "Main Menu",
     mainmenuColor,
     function() {
-      gotoMainMenu();
+      gotoScreen(MAINMENU);
     }));
 
   // highlight current settings
@@ -686,9 +681,6 @@ function drawSettings() {
   //very hacky
   var bagSizeMap = [4,1,2,0,0,0,0,3];
   var themeMap = [6,7];
-
-
-
 }
 
 function clearButtons() {
@@ -732,10 +724,6 @@ function continuePlaying() {
 
 }
 
-function playAgain() {
-  reset();
-}
-
 function nextMission() {
   if (recentWin) {
     currentMission += 1;
@@ -744,21 +732,23 @@ function nextMission() {
   }
 }
 
+function gotoScreen(screen) {
+  radioLists = [];
+  gameScreen = screen;
+  if (screen === SETTINGS ) {
+    drawSettings();
+  } else if (screen == MAINMENU) {
+    drawMainMenu();
+  }
+}
+
+
 function gotoControls(platform) {
   gameScreen = CONTROLS;
   drawControls(platform);
 }
 
-function gotoSettings() {
-  gameScreen = SETTINGS;
-  drawSettings();
-}
 
-function gotoMainMenu() {
-  gameScreen = MAINMENU;
-  drawMainMenu();
-
-}
 
 function drawMainMenu() {
   var pad = tilesz *.5;
@@ -832,7 +822,7 @@ function drawMainMenu() {
     'Settings',
     settingsColor, 
     function() {
-      gotoSettings();
+      gotoScreen(SETTINGS);
     },
     false));
 
@@ -1044,7 +1034,6 @@ function nextPiece() {
 bagSize = 1;
 function initRandomizer() {
   bag = [];
-
   makeAndShuffleBag();
 }
 
@@ -1259,6 +1248,9 @@ RadioList.prototype.mouse_down = function(mouseX, mouseY) {
 
   if (hit === true) {
     selected = Math.floor( relativeY / this.lineHeight);
+    if (selected === 0 && this.titled) {
+      return hit;
+    }
     this.new_selection(selected);
     this.fn(); //run the button's function
   }
@@ -1324,7 +1316,6 @@ function drawCircle(ctx, x, y, radius, color, filled, outlined) {
     ctx.stroke(); 
   }
 }
-
 
 
 // --------------------------------------------------
@@ -1687,10 +1678,7 @@ function handleClick(evt) {
 
   if (button_was_clicked) return; //return early because button was clicked
 
-  if (gameScreen == SETTINGS) {
-    interpretSettingsTap(y);
-  } 
-  else if (gameScreen === INPLAY || gameScreen == CONTROLS) {
+  if (gameScreen === INPLAY || gameScreen == CONTROLS) {
     if (cx < wWidth / 2) {
       piece.rotate(3);
     } else {
@@ -1699,20 +1687,6 @@ function handleClick(evt) {
   }
 };
 
-
-// the logic of taps / clicks performed on Settings screen
-function interpretSettingsTap(y) {
-  var textHeight = 1.5 * tilesz;
-  // textOffset is 1*tilesz on header, 2.5*tilesz on item
-  var textOffset = 0;
-  var startY = (TOPSPACE + 0.5) * tilesz;
-  var themeText = [ 'Theme:',
-                    'Tropical'];
-                   // 'Trans Flag'];
-
-  // each subsequent line is another textHeight away
-
-}
 
 
 function drawRectangle(x,y,width,height,color) {
