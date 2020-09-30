@@ -30,6 +30,8 @@ deor = '#FF7043';
 
 teal = '#E0F2F1';
 
+darkAmbe = '#997300';
+
 topBarColor = teal;
 resultsColor = teal;
 cardColor = teal;
@@ -40,6 +42,7 @@ mainmenuColor = blue;
 
 endlessColor = cyan;
 missionsColor = ambe;
+missionsUnavailableColor = darkAmbe;
 practiceColor = deor;
 settingsColor = pink;
 controlsColor = gree;
@@ -114,11 +117,16 @@ var wideButtonX;
 var halfButton;
 var halfButtonFarX;
 
+var missionWidth;
+var missionFirstColX;
+
+
+
 var fontSize;
 var fontSizeSmall;
 
-var SMALLBUTTON = 2
-var BIGBUTTON   = 3;
+var SHORTBUTTON = 2
+var TALLBUTTON   = 3;
 
 context.lineWidth = 1;
 context.sRect = function (x, y, w, h, l) {
@@ -150,6 +158,9 @@ function initCanvas() {
   wideButtonX = .5 * tilesz;
   halfButton = (canvas.width - tilesz) / 2;
   halfButtonFarX = canvas.width/2;
+
+  missionWidth = (canvas.width - 2*tilesz) / 3;
+  missionFirstColX = .5 * tilesz;
 }
 
 function setColor(color) {
@@ -243,8 +254,9 @@ var gameScreen;
 var INPLAY    = 0;
 var GAMEOVER  = 1;
 var MAINMENU  = 2;
-var CONTROLS  = 3;
-var SETTINGS  = 4;
+var MISSIONS  = 3;
+var CONTROLS  = 4;
+var SETTINGS  = 5;
 
 function reset() {
   buttons = [];
@@ -325,9 +337,7 @@ function gameOver(result) {
   }
 
   if(result === WIN && gameMode === MS) { 
-    // moving this functionality to happen when user initiates it
-    // currentMission += 1;
-    // currentMission %= missions.length;
+    missionsRecord[currentMission] = rank;
   }
 
   drawContinueOptions(result);
@@ -338,7 +348,7 @@ function gameOver(result) {
 // Mission mode should also have a play next mission option
 
 function drawContinueOptions(result) {
-  var buttonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var buttonSpacing = (SHORTBUTTON + 0.5) * tilesz;
 
   var continueStart = (TOPSPACE + 8) * tilesz;
   var replayStart   = continueStart + buttonSpacing;
@@ -356,7 +366,7 @@ function drawContinueOptions(result) {
   buttons.push(new Button(wideButtonX,
     continueStart,
     wideButton,
-    SMALLBUTTON,
+    SHORTBUTTON,
     continueText,
     continueColor,
     function() {
@@ -366,7 +376,7 @@ function drawContinueOptions(result) {
     // draw 'fake' button with no functionality
     drawButton(wideButtonX,continueStart,
       wideButton,
-      SMALLBUTTON,
+      SHORTBUTTON,
       continueColor, 
       continueText,
       true,
@@ -377,7 +387,7 @@ function drawContinueOptions(result) {
     context.fRect(0.5 * tilesz,
       continueStart,
       canvas.width - (tilesz),
-      SMALLBUTTON * tilesz);
+      SHORTBUTTON * tilesz);
     context.globalAlpha = 1;
   }
 
@@ -386,7 +396,7 @@ function drawContinueOptions(result) {
     buttons.push(new Button(wideButtonX,
       replayStart,
       wideButton,
-      SMALLBUTTON,
+      SHORTBUTTON,
       replayText,
       replayColor,
       function() {
@@ -395,17 +405,7 @@ function drawContinueOptions(result) {
   }
 
   //main menu button
-  buttons.push(new Button(wideButtonX,
-    mainmenuStart,
-    wideButton,
-    SMALLBUTTON,
-    mainmenuText,
-    mainmenuColor,
-    function() {
-      gotoScreen(MAINMENU);
-    },
-    false));
-
+  drawMainMenuButton(mainmenuStart,false);
 }
 
 
@@ -473,7 +473,7 @@ function scoreBarMessage( message ) {
 
 function drawControls(platform) {
 
-  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
 
   var textHeight = 1 * tilesz;
   var textOffset = 0;
@@ -569,11 +569,11 @@ function drawControls(platform) {
   buttons.push(new Button(wideButtonX,
     platformToggleX,
     halfButton,
-    SMALLBUTTON * .6,
+    SHORTBUTTON * .6,
     platformsList[0],
     cardColor,
     function() {
-      gotoControls(MOBILE);
+      gotoScreen(CONTROLS, MOBILE);
     },
     mobileActive,
     false));
@@ -581,32 +581,23 @@ function drawControls(platform) {
   buttons.push(new Button(halfButtonFarX,
     platformToggleX,
     halfButton,
-    SMALLBUTTON * .6,
+    SHORTBUTTON * .6,
     platformsList[1],
     cardColor,
     function() {
-      gotoControls(DESKTOP);
+      gotoScreen(CONTROLS, DESKTOP);
     },
     !mobileActive,
     false));
 
-
   startY = canvas.height - sButtonSpacing;
-  buttons.push(new Button(wideButtonX,
-    startY,
-    wideButton,
-    SMALLBUTTON,
-    "Main Menu",
-    mainmenuColor,
-    function() {
-      gotoScreen(MAINMENU);
-    }));
+  drawMainMenuButton(startY);
 
 }
 
 function drawSettings() {
 
-  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
 
   var textHeight = 1.5 * tilesz;
   var textOffset = 0;
@@ -665,22 +656,8 @@ function drawSettings() {
     1));
 
   startY = canvas.height - sButtonSpacing;
-  buttons.push(new Button(wideButtonX,
-    startY,
-    wideButton,
-    SMALLBUTTON,
-    "Main Menu",
-    mainmenuColor,
-    function() {
-      gotoScreen(MAINMENU);
-    }));
+  drawMainMenuButton(startY);
 
-  // highlight current settings
-  // hardcoding in 1 bag and tropical
-  startY = (TOPSPACE + 0.5) * tilesz;
-  //very hacky
-  var bagSizeMap = [4,1,2,0,0,0,0,3];
-  var themeMap = [6,7];
 }
 
 function clearButtons() {
@@ -707,8 +684,9 @@ function replayMission() {
   reset();
 }
 
-function playMode(mode) {
+function playMode(mode, mission) {
   radioLists = [];
+  currentMission = mission;
   gameMode = mode;
   reset();
 }
@@ -732,30 +710,30 @@ function nextMission() {
   }
 }
 
-function gotoScreen(screen) {
+function gotoScreen(screen, platform) {
+  if (typeof platform === 'undefined') {
+    platform = MOBILE;
+  }
   radioLists = [];
   gameScreen = screen;
   if (screen === SETTINGS ) {
     drawSettings();
-  } else if (screen == MAINMENU) {
+  } else if (screen === MAINMENU) {
     drawMainMenu();
+  } else if (screen === MISSIONS) {
+    drawMissionsMenu();
+  } else if (screen === CONTROLS) {
+    drawControls(platform);
   }
 }
-
-
-function gotoControls(platform) {
-  gameScreen = CONTROLS;
-  drawControls(platform);
-}
-
 
 
 function drawMainMenu() {
   var pad = tilesz *.5;
   clearScreen();
 
-  var bButtonSpacing = (BIGBUTTON + 0.5) * tilesz;
-  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var bButtonSpacing = (TALLBUTTON + 0.5) * tilesz;
+  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
 
   var menuStart = TOPSPACE * tilesz + pad;
   var PPButtonY = menuStart;
@@ -773,7 +751,7 @@ function drawMainMenu() {
   buttons.push(new Button(wideButtonX,
     PPButtonY, 
     wideButton,
-    BIGBUTTON,
+    TALLBUTTON,
     '49 Piece Practice',
     practiceColor, 
     function() {
@@ -784,18 +762,18 @@ function drawMainMenu() {
   buttons.push(new Button(wideButtonX,
     MSButtonY, 
     wideButton,
-    BIGBUTTON,
+    TALLBUTTON,
     'Missions Mode',
     missionsColor, 
     function() {
-      playMode(MS);
+      gotoScreen(MISSIONS);
     }));
 
   // challenge mode button
   buttons.push(new Button(wideButtonX,
     CHButtonY,
     wideButton,
-    BIGBUTTON,
+    TALLBUTTON,
     'Challenge Mode',
     endlessColor,
     function() {
@@ -806,11 +784,11 @@ function drawMainMenu() {
   buttons.push(new Button(wideButtonX,
     ControlButtonY, 
     wideButton,
-    SMALLBUTTON,
+    SHORTBUTTON,
     'Controls',
     controlsColor, 
     function() {
-      gotoControls(MOBILE);
+      gotoScreen(CONTROLS, MOBILE);
     },
     false));
 
@@ -818,7 +796,7 @@ function drawMainMenu() {
   buttons.push(new Button(wideButtonX,
     SettButtonY, 
     wideButton,
-    SMALLBUTTON,
+    SHORTBUTTON,
     'Settings',
     settingsColor, 
     function() {
@@ -828,6 +806,51 @@ function drawMainMenu() {
 
 
 }
+
+function drawMissionsMenu() {
+  clearScreen();
+
+  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
+  var startY = (TOPSPACE + .5) * tilesz;
+
+  for (let i = 0; i < missions.length; i++) {
+    var missionX = missionFirstColX + (.5 * tilesz + missionWidth)*(i % 3);
+    var missionY = startY + ( Math.floor(i/3) )*sButtonSpacing;
+    var mNum = i+1;
+    var mRec = missionsRecord[i];
+    if (mRec === 'F') {
+      mRec = ' ';
+    }
+    var mColor = missionsRecord[i-1] !== 'F' ? 
+      missionsColor :
+      missionsUnavailableColor;
+    buttons.push(new Button(missionX,
+      missionY, 
+      missionWidth,
+      SHORTBUTTON,
+      mNum+": "+mRec,
+      mColor, 
+      function() {
+        if (i === 0) {
+          playMode(MS,i);
+        } else if (missionsRecord[i-1] !== 'F') {
+          playMode(MS,i);
+        } else {
+          gotoScreen(MISSIONS);
+        }
+      }));
+
+  }
+
+
+  startY = canvas.height - sButtonSpacing;
+  drawMainMenuButton(startY);
+
+}
+
+
+
+
 
 // --------------------------------------------------
 // For Game Modes
@@ -1130,7 +1153,7 @@ var Button = function(x, y, width, height, text, color, fn, filled, rounded) {
 };
 
 Button.prototype.mouse_down = function(mouseX, mouseY) {
-//y > CHButtonY && y < CHButtonY + BIGBUTTON*tilesz
+//y > CHButtonY && y < CHButtonY + TALLBUTTON*tilesz
 //  var hit = ( mouseX > canvas.width / 2 ) ? true : false;
   var hit = ( mouseY > this.y && 
     mouseY < this.y + this.height*tilesz &&
@@ -1212,6 +1235,25 @@ function drawButton(  x,y,
 
 }
 
+function drawMainMenuButton(y, filled) {
+  if (typeof filled === 'undefined') {
+    rounded = false;
+  }
+
+  buttons.push(new Button(wideButtonX,
+    y,
+    wideButton,
+    SHORTBUTTON,
+    "Main Menu",
+    mainmenuColor,
+    function() {
+      gotoScreen(MAINMENU);
+    },
+    filled));
+}
+
+
+
 // --------------------------------------------------
 // Defining the Radio Button List prototype
 
@@ -1259,7 +1301,7 @@ RadioList.prototype.mouse_down = function(mouseX, mouseY) {
 
 RadioList.prototype.draw = function() {
 
-  var sButtonSpacing = (SMALLBUTTON + 0.5) * tilesz;
+  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
   var textOffset = 0;
 
   context.textAlign = 'left';
@@ -1869,7 +1911,8 @@ function initControlsTest() {
 
 function initGame() {
   BOARDWIDTH = 4;// get's changed in initControls, don't like it
-  initCanvas();
+  boardX = LEFTSPACE + 1 * thickLine; // get's changed in initControls
+  //initCanvas();
   initScores();
 
   board = initBoard(BOARDHEIGHT, BOARDWIDTH);
@@ -1891,6 +1934,7 @@ function initGame() {
 }
 
 function play() {
+  initCanvas();
   initGame();
   drawBoard();
   main();
