@@ -746,6 +746,7 @@ function drawMainMenu() {
 
   context.globalAlpha = 1.0;
 
+  scoreBarMessage('Combo Mambo');
 
   // play practice button
   buttons.push(new Button(wideButtonX,
@@ -809,6 +810,8 @@ function drawMainMenu() {
 
 function drawMissionsMenu() {
   clearScreen();
+
+  scoreBarMessage('Missions');
 
   var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
   var startY = (TOPSPACE + .5) * tilesz;
