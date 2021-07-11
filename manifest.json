@@ -2,7 +2,7 @@
   "name": "Combo Mambo",
   "short_name": "CM",
   "description": "How long can you keep a combo?",
-  "start_url": "../comboMambo.html",
+  "start_url": "https://wynnelson.com/dbm/comboMambo.html",
   "background_color": "#222222",
   "display": "fullscreen",
   "theme_color": "#059BB2",
