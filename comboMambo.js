@@ -4,55 +4,219 @@ var BLOCK = 2;
 var MOBILE = 0;
 var DESKTOP = 1;
 
-// global button list 
-var buttons = [];
-var radioLists = [];
-
-// --------------------------------------------------
-// colors 
-banana  = '#FFFF33';
-dragon  = '#FF3399';
-sky     = '#33FFFF';
-kiwi    = '#33FF33';
-blueb   = '#6633FF';
-peach   = '#FF9933';
-cloud   = '#CCCCFF';
-
-
-// 400 pink = '#EC407A';
-pink = '#F06292';
-blue = '#42A5F5';
-cyan = '#26C6DA';
-gree = '#66BB6A';
-lime = '#D4E157';
-ambe = '#FFCA28';
-deor = '#FF7043';
-
-teal = '#E0F2F1';
-
-darkAmbe = '#997300';
-
-topBarColor = teal;
-resultsColor = teal;
-cardColor = teal;
-continueColor = cyan;
-replayColor = lime;
-returnColor = blue;
-mainmenuColor = blue;
-
-endlessColor = cyan;
-missionsColor = ambe;
-missionsUnavailableColor = darkAmbe;
-practiceColor = deor;
-settingsColor = pink;
-controlsColor = gree;
-
-
-
-
 var theme;
 var TROPICAL = 0;
-var TRANS = 1;
+var PASTEL = 1;
+
+// --------------------------------------------------
+
+
+document.getElementById('practice-btn').addEventListener('click', function() {
+  hideMainMenuButtons();
+  showComboAndBest();
+  prepareToPlay();
+  playMode(3);
+});
+document.getElementById('missions-btn').addEventListener('click', function() {
+  hideMainMenuButtons();
+  //showCanvas();
+  showMissionsList();
+  showBottomMainMenuBtn();
+});
+document.getElementById('challenge-btn').addEventListener('click', function() {
+  hideMainMenuButtons();
+  prepareToPlay();
+  showComboAndBest();
+  playMode(1);
+});
+document.getElementById('controls-btn').addEventListener('click', function() {
+  hideMainMenuButtons();
+  showBottomMainMenuBtn();
+  showControlsPanel();
+  // logic based on platform?
+  hideAllControls();
+  if (document.documentElement.clientWidth < 600) {
+    showMobileControls();
+  } else {
+    showComputerControls();
+  }
+  //showCanvas();
+});
+document.getElementById('mobi-controls-btn').addEventListener('click', function() {
+  hideAllControls();
+  showMobileControls();
+});
+document.getElementById('comp-controls-btn').addEventListener('click', function() {
+  hideAllControls();
+  showComputerControls();
+});
+document.getElementById('settings-btn').addEventListener('click', function() {
+  hideMainMenuButtons();
+  showBottomMainMenuBtn();
+  showSettingsScreen();
+  //drawSettings();
+});
+document.getElementById('continue-btn').addEventListener('click', function(e) {
+  removeResultsPageStuff();
+  continuePlaying();
+});
+document.getElementById('cb-replay').addEventListener('click', function(e) {
+  removeResultsPageStuff(); 
+  replayMission();
+});
+
+function removeResultsPageStuff() {
+  hideBottomMainMenuBtn();
+  hideAndClearResultsCard();
+  hideContinueBtns();
+  hideCanvasOverlay();
+};
+document.getElementById('main-menu-btn').addEventListener('click', function() {
+  goToMainMenu();
+});
+
+let missionBtns = document.getElementById('missions').children;
+[...missionBtns].forEach(function(child) {
+  child.addEventListener('click', missionBtnClickHandler);
+});
+
+function missionBtnClickHandler() {
+  let number = this.value;
+  showComboAndMission();
+  hideMissionsList();
+  prepareToPlay();
+  playMode(MS, number-1);
+}
+function prepareToPlay() {
+  showCanvas();
+  showScoreBar();
+  hideBottomMainMenuBtn();
+}
+
+
+function bagSettingListener() {
+  bagSize = this.value;
+  initRandomizer();
+}
+var rad = document.forms.settings.elements.bag;
+for(var i = 0; i < rad.length; i++) {
+  rad[i].addEventListener('click', bagSettingListener);
+}
+
+
+function hideAllControls() {
+  document.getElementById("mobile-controls").hidden = true;
+  document.getElementById("computer-controls").hidden = true;
+  let className = 'selected';
+  Array.from(document.querySelectorAll('.' + className)).forEach(function(el) {
+    el.classList.remove(className);
+  });
+}
+function showComputerControls() {
+  document.getElementById("computer-controls").hidden = false;
+  document.getElementById("comp-controls-btn").classList.add("selected");
+}
+function showMobileControls() {
+  document.getElementById("mobile-controls").hidden = false;
+  document.getElementById("mobi-controls-btn").classList.add("selected");
+}
+
+
+function hideCanvas() {
+  document.getElementById('board').classList.add('dontShow');
+}
+function showCanvas() {
+  document.getElementById('board').classList.remove('dontShow');
+}
+function hideCanvasOverlay() {
+  document.getElementById('canvas-overlay').hidden = true;
+}
+function showCanvasOverlay() {
+  document.getElementById('canvas-overlay').hidden = false;
+}
+
+function hideMainMenuButtons() {
+  document.getElementById('homescreen-buttons').classList.add('dontShow');
+}
+function showMainMenuButtons() {
+  document.getElementById('homescreen-buttons').classList.remove('dontShow');
+}
+function hideMissionsList() {
+  document.getElementById('missions-list').hidden = true;
+}
+function showMissionsList() {
+  document.getElementById('missions-list').hidden = false;
+}
+function hideContinueBtns() {
+  document.getElementById('continue-buttons').classList.add('dontShow');
+  document.getElementById('cb-replay').hidden = true;
+}
+function showContinueBtns() {
+  document.getElementById('continue-buttons').classList.remove('dontShow');
+}
+function showReplayBtn() {
+  document.getElementById('cb-replay').hidden = false;
+}
+function hideBottomMainMenuBtn() {
+  document.getElementById('main-menu-bottom').classList.add('dontShow');
+}
+function showBottomMainMenuBtn() {
+  document.getElementById('main-menu-bottom').classList.remove('dontShow');
+}
+function hideResultsCard() {
+  document.getElementById('results-card').classList.add('dontShow');
+}
+function hideAndClearResultsCard() {
+  document.getElementById('results-card').classList.add('dontShow');
+  [...document.getElementById('results-card').children].forEach(function(child) {
+    child.innerHTML = '';
+  });
+}
+function showResultsCard() {
+  document.getElementById('results-card').classList.remove('dontShow');
+}
+function hideControlsPanel() {
+  document.getElementById('controls-panel').hidden = true;
+}
+function showControlsPanel() {
+  document.getElementById('controls-panel').hidden = false;
+}
+function hideSettingsScreen() {
+  document.getElementById('settings-screen').hidden = true;
+}
+function showSettingsScreen() {
+  document.getElementById('settings-screen').hidden = false;
+}
+function hideScoreBar() {
+  document.getElementById('score-bar-wrapper').classList.add('dontShow');
+}
+function showScoreBar() {
+  document.getElementById('score-bar-wrapper').classList.remove('dontShow');
+}
+/*
+function showTitle() {
+  hideScoreBarElements();
+  hideScoreBar();
+  document.getElementById('sb-title').hidden = false;
+}
+*/
+function showComboAndBest() {
+  hideScoreBarElements();
+  document.getElementById('sb-combo-count').hidden = false;
+  document.getElementById('sb-best-combo').hidden = false;
+}
+function showComboAndMission() {
+  hideScoreBarElements();
+  document.getElementById('sb-combo-count').hidden = false;
+  document.getElementById('sb-mission-number').hidden = false;
+}
+function hideScoreBarElements() {
+  let scoreBar = document.getElementById('score-bar');
+  [...scoreBar.children].forEach(function(child) {
+    child.hidden = true;
+  });
+}
+    
 
 
 // --------------------------------------------------
@@ -68,7 +232,7 @@ var pieces = [
 ];
 */
 
-
+/*
 var pieces = [
   [I, cyan],
   [J, blue],
@@ -77,6 +241,25 @@ var pieces = [
   [S, gree],
   [T, ambe],
   [Z, pink]
+];
+var pieces = [
+  [I, '#2C9C80'],//teal
+  [J, '#F3DE2C'],//bann
+  [L, '#5C8001'],//cado
+  [O, '#7CB518'],//granny
+  [S, '#FB6107'],//oran
+  [T, '#AA5090'],//lot
+  [Z, '#FBB02D']
+];
+*/
+var pieces = [
+  [I, '#059BB2'],//teal
+  [J, '#F75C18'],//bann
+  [L, '#FEFFB3'],//cado
+  [O, '#C9D31A'],//granny
+  [S, '#669900'],//oran
+  [T, '#F4D048'],//lot
+  [Z, '#E70157']
 ];
 var done;
 var gdone;
@@ -112,10 +295,6 @@ var wHeight;
 var wWidth;
 var thinLine;
 var thickLine;
-var wideButton;
-var wideButtonX;
-var halfButton;
-var halfButtonFarX;
 
 var missionWidth;
 var missionFirstColX;
@@ -144,6 +323,8 @@ context.fRect = function (x, y, w, h) {
 
 function initCanvas() {
   wHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+  //document.getElementById('game-bg').style.width = parseInt(wHeight *.55) + 'px';
+  console.log(wHeight);
   wWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
   tilesz = parseInt(wHeight * BOARDPERCENT / BOARDHEIGHT);
   fontSize      = '' + tilesz + 'px Arial';
@@ -152,12 +333,14 @@ function initCanvas() {
   thickLine = 0.25;
   boardX = LEFTSPACE + 1 * thickLine;
   sideBarX = LEFTSPACE + BOARDWIDTH + 2 * thickLine;
-  canvas.width = (sideBarX + RIGHTSPACE) * tilesz;
-  canvas.height = (TOPSPACE + BOARDHEIGHT + BOTTOMSPACE) * tilesz;
-  wideButton = canvas.width - tilesz;
-  wideButtonX = .5 * tilesz;
-  halfButton = (canvas.width - tilesz) / 2;
-  halfButtonFarX = canvas.width/2;
+  let cWidth = (sideBarX + RIGHTSPACE) * tilesz;
+  let cHeight = (TOPSPACE + BOARDHEIGHT + BOTTOMSPACE) * tilesz;
+  //canvas.width = (sideBarX + RIGHTSPACE) * tilesz;
+  //canvas.height = (TOPSPACE + BOARDHEIGHT + BOTTOMSPACE) * tilesz;
+  canvas.width = cWidth;
+  canvas.height = cHeight;
+  document.getElementById("canvas-overlay").style.width = cWidth;
+  document.getElementById("canvas-overlay").style.height = cHeight;
 
   missionWidth = (canvas.width - 2*tilesz) / 3;
   missionFirstColX = .5 * tilesz;
@@ -173,66 +356,7 @@ function setColor(color) {
   } 
   */
 }
-clear = 'black';
-
-
-
-/**
- * From stackoverflow:
- * Draws a rounded rectangle using the current state of the canvas.
- * If you omit the last three params, it will draw a rectangle
- * outline with a 5 pixel border radius
- * @param {CanvasRenderingContext2D} ctx
- * @param {Number} x The top left x coordinate
- * @param {Number} y The top left y coordinate
- * @param {Number} width The width of the rectangle
- * @param {Number} height The height of the rectangle
- * @param {Number} [radius = 5] The corner radius; It can also be an object 
- *                 to specify different radii for corners
- * @param {Number} [radius.tl = 0] Top left
- * @param {Number} [radius.tr = 0] Top right
- * @param {Number} [radius.br = 0] Bottom right
- * @param {Number} [radius.bl = 0] Bottom left
- * @param {Boolean} [fill = false] Whether to fill the rectangle.
- * @param {Boolean} [stroke = true] Whether to stroke the rectangle.
- */
-function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-  if (typeof stroke === 'undefined') {
-    stroke = true;
-  }
-  if (typeof radius === 'undefined') {
-    radius = 5;
-  }
-  if (typeof radius === 'number') {
-    radius = {tl: radius, tr: radius, br: radius, bl: radius};
-  } else {
-    var defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
-    for (var side in defaultRadius) {
-      radius[side] = radius[side] || defaultRadius[side];
-    }
-  }
-  ctx.beginPath();
-  ctx.moveTo(x + radius.tl, y);
-  ctx.lineTo(x + width - radius.tr, y);
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
-  ctx.lineTo(x + width, y + height - radius.br);
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
-  ctx.lineTo(x + radius.bl, y + height);
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
-  ctx.lineTo(x, y + radius.tl);
-  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
-  ctx.closePath();
-  if (fill) {
-    ctx.fill();
-  }
-  if (stroke) {
-    ctx.stroke();
-  }
-
-}
-
-
-
+clear = '#111';
 
 
 // --------------------------------------------------
@@ -259,187 +383,179 @@ var CONTROLS  = 4;
 var SETTINGS  = 5;
 
 function reset() {
-  buttons = [];
   initGame();
   drawBoard();
   main();
+  console.log('game reset');
 }
 
 function clearScreen() {
-  setColor('black');
+  setColor('#111');
   context.fRect(0,
           TOPSPACE * tilesz,
           canvas.width,
           canvas.height-TOPSPACE * tilesz);
 }
 
+function addToResultsCard(message) {
+  let div = document.createElement('div');
+  div.innerHTML = message;
+  document.getElementById('results-card').appendChild(div);
+}
+function setResultsTitle(title) {
+  document.getElementById('rs-title').innerHTML = title;
+}
+function setResultsCombo(val) {
+  let inner = 'Combo: <span>' + val + '</span>';
+  document.getElementById('rs-combo').hidden = false;
+  document.getElementById('rs-combo').innerHTML = inner;
+}
+function setResultsBestCombo(val) {
+  let inner = 'Best Combo: <span>' + val + '</span>';
+  document.getElementById('rs-best-combo').hidden = false;
+  document.getElementById('rs-best-combo').innerHTML = inner;
+}
+function setResultsPieces(val) {
+  let inner = 'Pieces: <span>' + val + '</span>';
+  document.getElementById('rs-pieces').hidden = false;
+  document.getElementById('rs-pieces').innerHTML = inner;
+}
+function setResultsScore(val) {
+  let inner = 'Score: <span>' + val + '</span>';
+  document.getElementById('rs-score').hidden = false;
+  document.getElementById('rs-score').innerHTML = inner;
+}
+function setResultsRank(val) {
+  let inner = 'Rank: <span>' + val + '</span>';
+  document.getElementById('rs-rank').hidden = false;
+  document.getElementById('rs-rank').innerHTML = inner;
+}
+
 function gameOver(result) {
-  var message = '';
-  var rank = '';
-  var replayOffset = 2;
+  document.activeElement.blur();
+  showCanvasOverlay();
+  showResultsCard();
   gameScreen = GAMEOVER;
-
-  if (result === WIN) {
-    message = 'You Won'
-  } else if (result === LOSE) {
-    message = 'Game Over';
-  } else if (result === BADWIN) {
-    message = 'Try Again';
-  } else if (result === FINISHED) {
-    message = 'Finished'
+  let resCard = document.getElementById('results-card');
+  switch (result) {
+    case WIN:
+      setResultsTitle('You Won');
+      break;
+    case LOSE:
+      setResultsTitle('Game Over');
+      break;
+    case BADWIN:
+      setResultsTitle('Try Again');
+      break;
+    case FINISHED:
+      setResultsTitle('Finished');
+      break;
   }
-  context.globalAlpha = 0.6;
-  clearScreen();
-
-  setColor(resultsColor);
-  context.globalAlpha = 1;
-
-  // draw results card background
-  context.fRect(0.5 * tilesz,
-        (TOPSPACE + 0.5) * tilesz,
-        canvas.width - (tilesz),
-        7 * tilesz);
-
-  // write results
-  context.font = fontSize;
-  setColor('black');
-  context.textAlign = 'center';
-  context.fillText(message,
-        canvas.width / 2,
-        (TOPSPACE + 2) * tilesz);
-  context.textAlign = 'left';
-  if (gameMode === CH) {
-    context.fillText('Combo: ' + combo,
-        1 * tilesz,
-        (TOPSPACE + 3.5) * tilesz);
-    context.fillText('Pieces: '+ numpieces,
-        1 * tilesz,
-        (TOPSPACE + 5) * tilesz);
-    context.fillText('Score: '+ Math.floor(((combo / numpieces) * 1000.)),
-        1 * tilesz,
-        (TOPSPACE + 6.5) * tilesz);
-  } else if (gameMode === MS) {
-    context.fillText('Combo: ' + combo,
-        1 * tilesz,
-        (TOPSPACE + 4) * tilesz);
-    rank = calculateRank(result);
-    context.fillText('Rank: '+ rank,
-        1 * tilesz,
-        (TOPSPACE + 6) * tilesz);
-  } else if (gameMode === PP) {
-    context.fillText('Best Combo: ' + allTimeBestCombo,
-        1 * tilesz,
-        (TOPSPACE + 4) * tilesz);
-    rank = calculateRank(result);
-    context.fillText('Pieces: '+ numpieces,
-        1 * tilesz,
-        (TOPSPACE + 6) * tilesz);
-  }
-
-  if(result === WIN && gameMode === MS) { 
-    missionsRecord[currentMission] = rank;
+  
+  switch (gameMode) {
+    case CH:
+      let score = Math.floor(((combo / numpieces) * 1000.));
+      setResultsCombo(combo);
+      setResultsPieces(numpieces);
+      setResultsScore(score);
+      break;
+    case MS:
+      let rank = calculateRank(result);
+      setResultsCombo(combo);
+      setResultsRank(rank);
+      updateMissionRank(currentMission, rank);
+      if(result === WIN) { 
+        missionsRecord[currentMission] = rank;
+      }
+      break;
+    case PP:
+      setResultsBestCombo(allTimeBestCombo);
+      setResultsPieces(numpieces);
+      break;
   }
 
   drawContinueOptions(result);
 }
 
+function updateMissionRank(mission, rank) {
+  let msn = document.getElementById('missions').children[mission];
+  if (isBetterRank(rank, msn.getAttribute('data-rank'))) {
+    msn.setAttribute('data-rank', rank);
+    msn.innerHTML = msn.value + ':  ' + rank;
+    if (rank !== 'D') {
+      enableNextMission(mission);
+    }
+  }
+}
+function enableNextMission(mission) {
+  let msns = document.getElementById('missions').children;
+  if (mission < msns.length) {
+    msns[mission + 1].disabled = false;
+  }
+}
+
+function isBetterRank(r1, r2) {
+  let ranks = ['D', 'C', 'B', 'A'];
+  if (ranks.indexOf(r1) > ranks.indexOf(r2)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 // On the game over summary screen there are buttons
 // to play again or go to main menu
 // Mission mode should also have a play next mission option
-
 function drawContinueOptions(result) {
-  var buttonSpacing = (SHORTBUTTON + 0.5) * tilesz;
+  showContinueBtns();
+  showBottomMainMenuBtn();
 
-  var continueStart = (TOPSPACE + 8) * tilesz;
-  var replayStart   = continueStart + buttonSpacing;
-  var mainmenuStart   = replayStart + buttonSpacing;
-
+  document.getElementById('continue-btn').disabled = false;
   var continueText = "Play Again";
   var replayText = "Replay Mission";
   var mainmenuText = "Main Menu";
   if (gameMode === MS) {
-    continueText = "Play Next Mission";
+    continueText = "Next Mission";
+    showReplayBtn();
+    if ( result !== WIN ) {
+      // maybe do logic check to see if it the next msn is disabled
+      document.getElementById('continue-btn').disabled = true;
+    }
   }
 
-  //continue button
-  if ( gameMode !== MS || result === WIN ) {
-  buttons.push(new Button(wideButtonX,
-    continueStart,
-    wideButton,
-    SHORTBUTTON,
-    continueText,
-    continueColor,
-    function() {
-      continuePlaying();
-    }));
-  } else {
-    // draw 'fake' button with no functionality
-    drawButton(wideButtonX,continueStart,
-      wideButton,
-      SHORTBUTTON,
-      continueColor, 
-      continueText,
-      true,
-      true);
-    //shade out continue button  
-    context.globalAlpha = 0.4;
-    setColor('black');
-    context.fRect(0.5 * tilesz,
-      continueStart,
-      canvas.width - (tilesz),
-      SHORTBUTTON * tilesz);
-    context.globalAlpha = 1;
-  }
-
-  //replay button
-  if (gameMode === MS) {
-    buttons.push(new Button(wideButtonX,
-      replayStart,
-      wideButton,
-      SHORTBUTTON,
-      replayText,
-      replayColor,
-      function() {
-        replayMission();
-      }));
-  }
-
-  //main menu button
-  drawMainMenuButton(mainmenuStart,false);
+  document.getElementById('continue-btn').innerHTML = continueText;
 }
-
-
-
 
 // In missions mode, every attempt gets a grade
 function calculateRank(result) {
-  var rank;
-  var gotMaxCombo = false;
-  var gotAllClear = false;
+  let rank = '';
+  let gotMaxCombo = false;
+  let gotAllClear = false;
+  let msn = currentMission;
 
-  if (result === LOSE) {
-    rank = ' ';
-  } else if (result === BADWIN) {
-    rank = 'D';
-  } else if (result === WIN) {
-    rank = 'C';
-    if (combo === missions[currentMission][1][0]) {
-      gotMaxCombo = true;
-    }
-    if (!missions[currentMission][1][1]) {
-      if (gotMaxCombo) {
-        rank = 'A';
+  switch (result) {
+    case LOSE:
+      rank = ' ';
+      break;
+    case BADWIN:
+      rank = 'D';
+      break;
+    case WIN:
+      rank = 'C';
+      let maxCombo = missions[msn][1][0];
+      gotMaxCombo = combo === maxCombo ? true : false;
+      let allClearPossible = missions[msn][1][1];
+      if (!allClearPossible) {
+        rank = gotMaxCombo ? 'A' : 'B';
       } else {
-        rank = 'B';
+        gotAllClear = isAllClear();
+        if (gotAllClear && gotMaxCombo) {
+          rank = 'A';
+        } else if (gotAllClear || gotMaxCombo) {
+          rank = 'B';
+        }
       }
-    } else {
-      gotAllClear = isAllClear();
-      if (gotAllClear && gotMaxCombo) {
-        rank = 'A';
-      } else if (gotAllClear || gotMaxCombo) {
-        rank = 'B';
-      }
-    }
+      break;
   }
   
   return rank;
@@ -457,235 +573,11 @@ function isAllClear() {
   return cleared;
 }
 
-function scoreBarMessage( message ) {
-  setColor(topBarColor);
-  context.fRect(0, 0,
-    canvas.width,
-    TOPSPACE*tilesz-1);
-  //ctx.font = fontSize;
-  setColor('black');
-  context.textAlign = 'center';
-  context.font = fontSize;
-  context.fillText(message,
-    canvas.width/2,
-    TOPSPACE * tilesz / 1.5);
-}
-
-function drawControls(platform) {
-
-  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
-
-  var textHeight = 1 * tilesz;
-  var textOffset = 0;
-  var startY = (TOPSPACE + 0.5) * tilesz;
-  var basAText = [['Swipe Left:',
-                   'Swipe Right:',
-                   'Tap Left of Center:',
-                   'Tap Right of Center:'],
-                  ['Left Arrow:',
-                   'Right Arrow:',
-                   '"S" or Up Arrow:',
-                   '"D" Key:']];
-  var basRText = ['slide left',
-                  'slide right',
-                  'rotate left',
-                  'rotate right'];
-  var advAText = [[ 'Swipe Up:',
-                    'Swipe Down:'],
-                  [ '"A" Key:',
-                    'Space Button:']];
-  var advRText = ['store piece',
-                  'drop piece'];
-  var platformsList = [ 'Mobile',
-                        'Computer'];
-
-  scoreBarMessage('Controls: ' + platformsList[platform]);
-
-
-
-  // clear the board 
-  clearScreen();
-
-  // draw  controls card
-  setColor(cardColor);
-  roundRect(context,
-    0.5 * tilesz,
-    startY,
-    canvas.width - (tilesz),
-    (basAText[platform].length + 7) * textHeight + tilesz*.6,
-    0,
-    true,
-    false);
-  context.font = fontSizeSmall;
-
-  setColor('black');
-  
-  // draw piece window
-  roundRect(context,
-    (.7) * tilesz,
-    startY+ 5*textHeight,
-    (9.1)*tilesz,
-    4*tilesz,
-    0,
-    true,
-    false);
-
-  // write basic controls
-  startY += textHeight;
-  for (let i = 0; i < basAText[platform].length; i++) {
-    textOffset = 1 * tilesz;
-    context.textAlign = 'left';
-    context.fillText(basAText[platform][i],
-        textOffset,
-        startY + textHeight * (i));
-    context.textAlign = 'right';
-    context.fillText(basRText[i],
-        canvas.width - textOffset,
-        startY + textHeight * (i));
-  }
-
-  startY += (basAText[platform].length ) * textHeight + tilesz*4,
-
-  setColor('black');
-  var platformToggleX = startY + (advAText[platform].length ) * textHeight + tilesz*.6;
-
-  // write advanced controls
-  startY += textHeight;
-  for (let i = 0; i < advAText[platform].length; i++) {
-    textOffset = 1 * tilesz;
-    context.textAlign = 'left';
-    context.fillText(advAText[platform][i],
-        textOffset,
-        startY + textHeight * (i));
-    context.textAlign = 'right';
-    context.fillText(advRText[i],
-        canvas.width - textOffset,
-        startY + textHeight * (i));
-  }
-
-  initControlsTest();
-
-  var mobileActive = (platform === MOBILE) ? true : false;
-  buttons.push(new Button(wideButtonX,
-    platformToggleX,
-    halfButton,
-    SHORTBUTTON * .6,
-    platformsList[0],
-    cardColor,
-    function() {
-      gotoScreen(CONTROLS, MOBILE);
-    },
-    mobileActive,
-    false));
-
-  buttons.push(new Button(halfButtonFarX,
-    platformToggleX,
-    halfButton,
-    SHORTBUTTON * .6,
-    platformsList[1],
-    cardColor,
-    function() {
-      gotoScreen(CONTROLS, DESKTOP);
-    },
-    !mobileActive,
-    false));
-
-  startY = canvas.height - sButtonSpacing;
-  drawMainMenuButton(startY);
-
-}
-
-function drawSettings() {
-
-  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
-
-  var textHeight = 1.5 * tilesz;
-  var textOffset = 0;
-  var startY = (TOPSPACE + 0.5) * tilesz;
-  var randomizerText = ['Randomizer:',
-                        '1 Bag',
-                        '2 Bag',
-                        '7 Bag',
-                        'Random'];
-
-  var themeText = [ 'Theme:',
-                    'Tropical'];
-                   // 'Trans Flag'];
-
-  scoreBarMessage('Settings');
-  clearScreen();
-
-  setColor(cardColor);
-  context.fRect(0.5 * tilesz,
-        startY,
-        canvas.width - (tilesz),
-        (randomizerText.length + themeText.length) * textHeight + tilesz);
-  context.font = fontSize;
-  setColor('black');
-
-  startY += textHeight;
-
-  //very hacky
-  var bagSizeToSelection = [4,1,2,0,0,0,0,3];
-  radioLists.push(new RadioList(tilesz,
-    startY,
-    canvas.width - (2 * tilesz),
-    textHeight,
-    randomizerText,
-    function() {
-      var selectionToBagSize = [1,2,7,0];
-      bagSize = selectionToBagSize[this.selection-1];
-      initRandomizer();
-      console.log('bag size: '+ bagSize);
-    },
-    true,
-    bagSizeToSelection[bagSize]));
-  
-  startY += textHeight * (randomizerText.length);
-
-
-  radioLists.push(new RadioList(tilesz,
-    startY,
-    canvas.width - (tilesz),
-    textHeight,
-    themeText,
-    function() {
-     // 
-    },
-    true,
-    1));
-
-  startY = canvas.height - sButtonSpacing;
-  drawMainMenuButton(startY);
-
-}
-
-function clearButtons() {
-  buttons = [];
-  
-}
-
-function startEndless() {
-  gameMode = CH; 
-  reset();
-}
-
-function startMissions() {
-  gameMode = MS; 
-  reset();
-}
-
-function startPractice() {
-  gameMode = PP; 
-  reset();
-}
-
 function replayMission() {
   reset();
 }
 
 function playMode(mode, mission) {
-  radioLists = [];
   currentMission = mission;
   gameMode = mode;
   reset();
@@ -699,191 +591,49 @@ function continuePlaying() {
     currentMission %= missions.length;
     reset();
   }
-
 }
 
-function nextMission() {
-  if (recentWin) {
-    currentMission += 1;
-    currentMission %= missions.length;
-    reset();
-  }
+function hideNonMainMenuThings() {
+  hideBottomMainMenuBtn();
+  hideSettingsScreen();
+  hideAndClearResultsCard();
+  hideContinueBtns();
+  hideMissionsList();
+  hideControlsPanel();
+  hideScoreBar();
+  hideCanvas();
+  hideCanvasOverlay();
 }
+function goToMainMenu() {
+  gameScreen = MAINMENU;
+  hideNonMainMenuThings();
+  showMainMenuButtons();
 
-function gotoScreen(screen, platform) {
-  if (typeof platform === 'undefined') {
-    platform = MOBILE;
-  }
-  radioLists = [];
-  gameScreen = screen;
-  if (screen === SETTINGS ) {
-    drawSettings();
-  } else if (screen === MAINMENU) {
-    drawMainMenu();
-  } else if (screen === MISSIONS) {
-    drawMissionsMenu();
-  } else if (screen === CONTROLS) {
-    drawControls(platform);
-  }
-}
-
-
-function drawMainMenu() {
-  var pad = tilesz *.5;
+  //old, with different handling of canvases, this might not be needed
   clearScreen();
-
-  var bButtonSpacing = (TALLBUTTON + 0.5) * tilesz;
-  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
-
-  var menuStart = TOPSPACE * tilesz + pad;
-  var PPButtonY = menuStart;
-  var MSButtonY = menuStart + bButtonSpacing;
-  var CHButtonY = menuStart + bButtonSpacing * 2;  
-
-  var menuBottom      = canvas.height - 0.5 * tilesz;
-  var SettButtonY     = menuBottom - sButtonSpacing;
-  var ControlButtonY  = menuBottom - sButtonSpacing * 2;
-
   context.globalAlpha = 1.0;
-
-  scoreBarMessage('Combo Mambo');
-
-  // play practice button
-  buttons.push(new Button(wideButtonX,
-    PPButtonY, 
-    wideButton,
-    TALLBUTTON,
-    '49 Piece Practice',
-    practiceColor, 
-    function() {
-      playMode(PP);
-    }));
-
-  // missions mode button
-  buttons.push(new Button(wideButtonX,
-    MSButtonY, 
-    wideButton,
-    TALLBUTTON,
-    'Missions Mode',
-    missionsColor, 
-    function() {
-      gotoScreen(MISSIONS);
-    }));
-
-  // challenge mode button
-  buttons.push(new Button(wideButtonX,
-    CHButtonY,
-    wideButton,
-    TALLBUTTON,
-    'Challenge Mode',
-    endlessColor,
-    function() {
-      playMode(CH)
-    }));
-
-  //go to controls button
-  buttons.push(new Button(wideButtonX,
-    ControlButtonY, 
-    wideButton,
-    SHORTBUTTON,
-    'Controls',
-    controlsColor, 
-    function() {
-      gotoScreen(CONTROLS, MOBILE);
-    },
-    false));
-
-  // go to settings button
-  buttons.push(new Button(wideButtonX,
-    SettButtonY, 
-    wideButton,
-    SHORTBUTTON,
-    'Settings',
-    settingsColor, 
-    function() {
-      gotoScreen(SETTINGS);
-    },
-    false));
-
-
 }
-
-function drawMissionsMenu() {
-  clearScreen();
-
-  scoreBarMessage('Missions');
-
-  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
-  var startY = (TOPSPACE + .5) * tilesz;
-
-  for (let i = 0; i < missions.length; i++) {
-    var missionX = missionFirstColX + (.5 * tilesz + missionWidth)*(i % 3);
-    var missionY = startY + ( Math.floor(i/3) )*sButtonSpacing;
-    var mNum = i+1;
-    var mRec = missionsRecord[i];
-    if (mRec === 'F') {
-      mRec = ' ';
-    }
-    var mColor = missionsRecord[i-1] !== 'F' ? 
-      missionsColor :
-      missionsUnavailableColor;
-    buttons.push(new Button(missionX,
-      missionY, 
-      missionWidth,
-      SHORTBUTTON,
-      mNum+": "+mRec,
-      mColor, 
-      function() {
-        if (i === 0) {
-          playMode(MS,i);
-        } else if (missionsRecord[i-1] !== 'F') {
-          playMode(MS,i);
-        } else {
-          gotoScreen(MISSIONS);
-        }
-      }));
-
-  }
-
-
-  startY = canvas.height - sButtonSpacing;
-  drawMainMenuButton(startY);
-
-}
-
-
-
-
 
 // --------------------------------------------------
 // For Game Modes
-var CH = 1 // play endless 
-var MS = 2 // play missions
-var PP = 3 // play practice
+const CH = 1 // play endless 
+const MS = 2 // play missions
+const PP = 3 // play practice
 
-var gameMode = CH;
+let gameMode = CH;
 
 // --------------------------------------------------
 // For Mission Mode
 
-var currentMission = 0;
-
-// exists for testing
-function toggleMissionMode() {
-  if (gameMode !== MS) {
-    gameMode = MS;
-  } else {
-    gameMode = CH;
-  }
-}
+let currentMission = 0;
 
 // --------------------------------------------------
 // For Scoring
-var combo = 0;
-var allTimeBestCombo = 0;
-var localBestCombo = 0;
+let combo = 0;
+let allTimeBestCombo = 0;
+let localBestCombo = 0;
 
-var numpieces = 0;
+let numpieces = 0;
 
 function initScores() {
   combo = 0;
@@ -891,31 +641,20 @@ function initScores() {
   numpieces = 0;
 }
 
+function updateComboCount(combo) {
+  document.getElementById('sb-combo-count').innerHTML = 'Combo: ' + combo;
+}
+function updateBestCombo(combo) {
+  document.getElementById('sb-best-combo').innerHTML = 'Best: ' + combo;
+}
+function updateMissionNumber(mission) {
+  document.getElementById('sb-mission-number').innerHTML = 'Mission: ' + mission;
+}
+
 function drawStatusBar() {
-  setColor(topBarColor);
-  context.fRect(0, 0,
-    canvas.width,
-    TOPSPACE*tilesz-1);
-  //ctx.font = fontSize;
-  setColor('black');
-  context.textAlign = 'center';
-  context.font = fontSize;
-  if (gameMode === CH ) {
-    context.fillText(
-      'Combo: ' + combo + ' Best: ' + allTimeBestCombo,
-      canvas.width/2,
-      TOPSPACE * tilesz / 1.5);
-  } else if (gameMode === PP) {
-    context.fillText(
-      'Combo: ' + combo + ' Best: ' + localBestCombo,
-      canvas.width/2,
-      TOPSPACE * tilesz / 1.5);
-  } else if (gameMode === MS) {
-    var readableMission = currentMission + 1;
-    context.fillText('Combo: ' + combo + ' Mission: ' + readableMission,
-            canvas.width/2,
-            TOPSPACE * tilesz / 1.5);
-  }
+  updateComboCount(combo);
+  updateBestCombo(allTimeBestCombo);
+  updateMissionNumber(currentMission + 1);
 }
 
 // --------------------------------------------------
@@ -935,44 +674,59 @@ function updatePreview() {
 }
 
 function drawPreview() {
-  setColor('Black');
+  setColor('#111');
   context.fRect((sideBarX) * tilesz + 1,
     TOPSPACE * tilesz,
     RIGHTSPACE * tilesz,
     (BOARDHEIGHT - 4.1) * tilesz);
   for (let previewX = 0; previewX < Math.min(PREVIEW,bag.length); previewX++) {
-    var nextToComeNumber = bag[bag.length - (1 + previewX)];
-    var nextToComePiece = pieces[nextToComeNumber];
-    setColor(nextToComePiece[1]);
-    var size = nextToComePiece[0][0].length;
+    let nextToComeNumber = bag[bag.length - (1 + previewX)];
+    drawPiecePreview(nextToComeNumber, previewX);
+  }
+}
 
-    var wAdjustment = 1;
-    var hAdjustment = 0.5;
-    if (nextToComeNumber === 0) {
-      wAdjustment = 0.5;
-      hAdjustment = -1;
-    } else if (nextToComeNumber === 3) {
-      wAdjustment = 0.5;
-      hAdjustment = -0.5;
-    } else if (nextToComeNumber === 4 || nextToComeNumber === 6) {
-      hAdjustment = -0.5;
-    }
+function drawPiecePreview(pn, startX) {
+  let piece = pieces[pn];
+  setColor(piece[1]);
+  var size = piece[0][0].length;
+  let adjustments = getPreviewAdjustments(pn);
 
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (nextToComePiece[0][0][y][x] !== 0) {
-          // draw preview to the right
-          drawSquare(sideBarX + x + wAdjustment,
-            TOPSPACE + y + hAdjustment + 3 * previewX);
-        }
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (piece[0][0][y][x] !== 0) {
+        // draw preview to the right
+        drawSquare(sideBarX + x + adjustments[0],
+          TOPSPACE + y + adjustments[1] + 3 * startX);
       }
     }
   }
 }
 
+function getPreviewAdjustments(pn) {
+  let wAdj = 1;
+  let hAdj = 0.5;
+  switch (pn) {
+    case 0:
+      wAdj = 0.5;
+      hAdj = -1;
+      break;
+    case 3:
+      wAdj = 0.5;
+      hAdj = -0.5;
+      break;
+    case 4:
+      hAdj = -0.5;
+      break;
+    case 6:
+      hAdj = -0.5;
+      break;
+  }
+  return [wAdj, hAdj];
+}
+
 // --------------------------------------------------
 // For Randomizer
-var bagSize; // this should change based on what randomizer is chosen
+let bagSize = 1; // this should change based on what randomizer is chosen
 function getRandomInt(max) {
   return Math.floor(Math.random() * Math.floor(max));
 }
@@ -1023,10 +777,9 @@ function newPieceDet(blockNumber) {
   var p = pieces[blockNumber];
   currentPieceNumber = blockNumber;
   updatePreview();
-  topBarColor = p[1];
   
   //Drawing these things here so that they have the color of the current piece
-  drawBorders();
+  drawBorders(p[1]);
   drawStatusBar();
   return new Piece(p[0], p[1], blockNumber);
 }
@@ -1041,6 +794,8 @@ function nextPiece() {
     drawHold();
     return newPieceDet(heldPieceNumber);
   } else {
+    ranOutOfPieces();
+    /*
     if (gameMode === MS) {
       drawStatusBar();
       if (combo > 0) {
@@ -1054,10 +809,28 @@ function nextPiece() {
       drawStatusBar();
       gameOver(FINISHED);
     }
+    */
+  }
+}
+function ranOutOfPieces() {
+  switch (gameMode) {
+    case MS:
+      drawStatusBar();
+      if (combo > 0) {
+        recentWin = true;
+        gameOver(WIN);
+      } else {
+        recentWin = false;
+        gameOver(BADWIN);
+      }
+      break;
+    case PP:
+      drawStatusBar();
+      gameOver(FINISHED);
+      break;
   }
 }
 
-bagSize = 1;
 function initRandomizer() {
   bag = [];
   makeAndShuffleBag();
@@ -1100,7 +873,7 @@ function holdPiece() {
 }
 
 function drawHold() {
-  setColor('black');
+  setColor('#111');
   context.fRect(sideBarX * tilesz + 1,
     (TOPSPACE + BOARDHEIGHT - 3) * tilesz,
     RIGHTSPACE * tilesz,
@@ -1108,258 +881,43 @@ function drawHold() {
   if (isPieceHeld) {
     setColor(heldPiece[1]);
     var size = heldPiece[0][0].length;
-    var hAdjustment = 1 - 3;
-    var wAdjustment = 1;
-    if (heldPieceNumber === 0) {
-      hAdjustment = -0.5 - 3.5;
-      wAdjustment = 0.5;
-    } else if (heldPieceNumber === 3) {
-      hAdjustment -= 1;
-      wAdjustment = 0.5;
-    } else if (heldPieceNumber === 4 || heldPieceNumber === 6) {
-      hAdjustment -= 1;
-    }
+    let adjs = getHoldAdjustments(heldPieceNumber);
 
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         if (heldPiece[0][0][y][x] !== 0) {
-          drawSquare(sideBarX + x + wAdjustment,
-            TOPSPACE + y + BOARDHEIGHT + hAdjustment);
+          drawSquare(sideBarX + x + adjs[0],
+            TOPSPACE + y + BOARDHEIGHT + adjs[1]);
         }
       }
     }
   }
 }
 
+function getHoldAdjustments(pn) {
+  let wAdj = 1;
+  let hAdj = 1 - 3;
+  switch (pn) {
+    case 0:
+      wAdj = 0.5;
+      hAdj = -0.5 - 3.5;
+      break;
+    case 3:
+      wAdj = 0.5;
+      hAdj -= 1;
+      break;
+    case 4:
+      hAdj -= 1;
+      break;
+    case 6:
+      hAdj -= 1;
+      break;
+  }
+  return [wAdj, hAdj];
+}
+
 function drawSquare(x, y) {
   context.fRect(x * tilesz, y * tilesz, tilesz, tilesz);
-}
-
-
-
-// --------------------------------------------------
-// Defining the Button prototype
-
-var Button = function(x, y, width, height, text, color, fn, filled, rounded) {
-  this.x = x;
-  this.y = y;
-  this.width = width;
-  this.height = height;
-  this.text = text;
-  this.color = color;
-  //this.img = new Image();
-  //this.img.src = imgurl;
-  this.fn = fn; //pass the button's click function
-
-  drawButton(this.x, this.y, this.width, height, this.color, this.text, filled, rounded);
-//  this.draw();
-};
-
-Button.prototype.mouse_down = function(mouseX, mouseY) {
-//y > CHButtonY && y < CHButtonY + TALLBUTTON*tilesz
-//  var hit = ( mouseX > canvas.width / 2 ) ? true : false;
-  var hit = ( mouseY > this.y && 
-    mouseY < this.y + this.height*tilesz &&
-    mouseX > this.x &&
-    mouseX < this.x + this.width
-        ) ? true : false;
-  if (hit == true) {
-    console.log(this.text + ' button pressed');
-    clearButtons();
-    drawStatusBar();
-    this.fn(); //run the button's function
-  }
-  return hit;
-};
-
-// this draws a rectangle with text
-function drawButton(  x,y,
-                      width,
-                      height,
-                      color,
-                      text,
-                      filled,
-                      rounded) {
-
-  if (typeof filled === 'undefined') {
-    filled = true;
-  }
-  if (typeof rounded === 'undefined') {
-    rounded = true;
-  }
-  
-  var radius = rounded ? tilesz / 3 : 0;
-
-  // make black rectangle (done to add opacity)
-  // invisible for filled buttons 
-  context.globalAlpha = .5;
-  setColor('black');
-  roundRect(context,
-    x,
-    y,
-    width,
-    height * tilesz,
-    radius,
-    true,
-    true);
-
-  //draw button's rectangle
-  setColor(color);
-  context.globalAlpha = 1;
-  context.strokeStyle = color;
-  context.lineWidth = 2;
-  roundRect(context,
-    x,
-    y,
-    width,
-    height * tilesz,
-    radius,
-    filled,
-    !filled);
-
-  if (filled) {
-    // text color
-    setColor('black');
-
-  } else {
-    // text color
-    setColor(color);
-  }
-
-  //write button text
-  context.font = fontSize;
-  context.textAlign = 'center';
-  context.fillText(text,
-    width / 2 + x,
-    y + (height / 2 + .25)*tilesz);
-  setColor('black');
-  context.strokeStyle = 'black';
-  context.lineWidth = "2";
-
-}
-
-function drawMainMenuButton(y, filled) {
-  if (typeof filled === 'undefined') {
-    rounded = false;
-  }
-
-  buttons.push(new Button(wideButtonX,
-    y,
-    wideButton,
-    SHORTBUTTON,
-    "Main Menu",
-    mainmenuColor,
-    function() {
-      gotoScreen(MAINMENU);
-    },
-    filled));
-}
-
-
-
-// --------------------------------------------------
-// Defining the Radio Button List prototype
-
-var RadioList = function(x, y, width, lineHeight, options, fn, titled, selectedOption) {
-  this.x = x;
-  this.y = y;
-  this.width = width;
-  this.lineHeight = lineHeight;
-  this.options = options;
-  this.fn = fn; //pass the button's click function
-  this.titled = titled;
-  this.selectedOption = selectedOption;
-
-  this.height = options.length * lineHeight;
-
-  this.draw();
-  this.new_selection(selectedOption);
-
-};
-
-RadioList.prototype.mouse_down = function(mouseX, mouseY) {
-
-  var verticalAdjustment = .75 * this.lineHeight;
-  var y = this.y - verticalAdjustment;
-
-  var relativeY = mouseY - y;
-  var hit = ( relativeY > 0 && 
-    relativeY < this.height &&
-    mouseX > this.x &&
-    mouseX < this.x + this.width
-        ) ? true : false;
-
-  var selected = -1;
-
-  if (hit === true) {
-    selected = Math.floor( relativeY / this.lineHeight);
-    if (selected === 0 && this.titled) {
-      return hit;
-    }
-    this.new_selection(selected);
-    this.fn(); //run the button's function
-  }
-  return hit;
-};
-
-RadioList.prototype.draw = function() {
-
-  var sButtonSpacing = (SHORTBUTTON + 0.5) * tilesz;
-  var textOffset = 0;
-
-  context.textAlign = 'left';
-  for (let i = 0; i < this.options.length; i++) {
-    if (i === 0 && this.titled) {
-        textOffset = 0;
-    } else {
-      textOffset = 1.5 * tilesz;
-    }
-    setColor('black');
-    context.fillText(this.options[i],
-        this.x + textOffset,
-        this.y + this.lineHeight * i );
-  }
-}
-
-RadioList.prototype.new_selection = function(selected) {
-  this.selection = selected;
-  for (let i = 0; i < this.options.length; i++) {
-    if (i === 0 && this.titled) {
-        textOffset = 0;
-    } else {
-      textOffset = 1.5 * tilesz;
-      drawCircle(context,
-        this.x + 0.5 * tilesz, 
-        this.y + this.lineHeight * (i-.2),
-        tilesz/2,
-        cardColor,
-        true,
-        true);
-    }
-    if (i === selected) {
-      drawCircle(context,
-        this.x + 0.5 * tilesz, 
-        this.y + this.lineHeight * (i-.2),
-        tilesz/3,
-        mainmenuColor,
-        true,
-        false);
-    }
-  }
-}
-
-
-function drawCircle(ctx, x, y, radius, color, filled, outlined) {
-  setColor(color);
-  ctx.lineWidth = 2 ;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  if (filled) {
-    ctx.fill();
-  } 
-  if (outlined) { 
-    ctx.stroke(); 
-  }
 }
 
 
@@ -1636,7 +1194,6 @@ document.body.addEventListener('keydown', function (e) {
     }
     keydownIntervals[e.keyCode] = setInterval(key.bind(this, e.keyCode), 150);
   }
-
   key(e.keyCode);
 }, false);
 
@@ -1675,27 +1232,22 @@ function handleTouchMove(evt) {
   if (gameScreen != INPLAY && gameScreen != CONTROLS) {
     return;
   }
+  let xUp = evt.touches[0].clientX;
+  let yUp = evt.touches[0].clientY;
 
-  var xUp = evt.touches[0].clientX;
-  var yUp = evt.touches[0].clientY;
+  let xDiff = xDown - xUp;
+  let yDiff = yDown - yUp;
 
-  var xDiff = xDown - xUp;
-  var yDiff = yDown - yUp;
-
-  if (Math.abs(xDiff) > Math.abs(yDiff)) { /* most significant */
-    if (xDiff > 0) {
-      /* left swipe */
-      piece.moveLeft();
-    } else {
-      /* right swipe */
+  if (Math.abs(xDiff) > Math.abs(yDiff)) { //checks if horizontal swipe
+    if (xDiff > 0) { // left swipe
+      piece.moveLeft(); 
+    } else { // right swipe
       piece.moveRight();
     }
   } else {
-    if (yDiff > 0) {
-      /* up swipe */
+    if (yDiff > 0) { // up swipe
       holdPiece();
-    } else {
-      /* down swipe */
+    } else { // down swipe
       while (piece.down() == 0) {}
     }
   }
@@ -1708,112 +1260,113 @@ function handleTouchMove(evt) {
 document.addEventListener('click', handleClick, false);
 
 function handleClick(evt) {
-  var x = evt.offsetX;
-  var cx = evt.clientX;
-  var y = evt.offsetY; 
+  let x = evt.offsetX;
+  let cx = evt.clientX;
+  let y = evt.offsetY; 
+  if (evt.target.nodeName === 'BUTTON' ) {
+    console.log('aborting');
+    return; // button press clicks handled independently, abort
+  }
 
-  console.log('offestX: '+x+ ' offestY: '+y);
-  var button_was_clicked = buttons.some(function(b) {
-    return b.mouse_down(x, y);
-  });
-
-  var radio_list_was_clicked = radioLists.some(function(b) {
-    return b.mouse_down(x, y);
-  });
-
-  if (button_was_clicked) return; //return early because button was clicked
-
-  if (gameScreen === INPLAY || gameScreen == CONTROLS) {
+  if (gameScreen === INPLAY || gameScreen === CONTROLS) {
+    console.log('offsetX: '+x+ ' offsetY: '+y);
+    console.log('clientX: ' + cx);
+    console.log(wWidth);
     if (cx < wWidth / 2) {
       piece.rotate(3);
+      console.log('rotated, tap 3, cx: ' + cx);
     } else {
       piece.rotate(1);
+      console.log('rotated, tap 1, cx: ' + cx);
     }
   }
 };
 
 
-
-function drawRectangle(x,y,width,height,color) {
-
-  context.globalAlpha = 1.0;
-  context.beginPath();
-  context.lineWidth = "2";
-  context.strokeStyle = color;
-  context.rect(x, y, width, height); 
-  context.stroke();
-
-}
-
-
 // --------------------------------------------------
 function key(k) {
-  if (k === 82) { // Player pressed r
-    reset();
+  if (k === 32) {
+    console.log('space is pressed');
   }
-  // mission navigation is prettty buggy right now
-  // exists for testing
-  if (k === 69) { // Player pressed e
-    if (gameMode = MS) {
-      //if (currentMission !== 0) {
-        currentMission += missions.length - 1;
-        currentMission %= missions.length;
-     // } else {
-     //   currentMission = missions.length;
-     // }
-      reset();
-    }
-  }
-  if (k === 84) { // Player pressed t
-    if (gameMode = MS) {
-      currentMission += 1;
-      currentMission %= missions.length;
-      reset();
-    }
-  }
-  if (k === 77) { // Player pressed m
-    // toggle if missions are being played or not
-    // exists for testing purposes
-    toggleMissionMode();
-    reset();
-  }
-
-  
   //if (gdone) {
-  if (gameScreen != INPLAY && gameScreen != CONTROLS) {
-    return;
-  }
-
-  if (k === 38) { // Player pressed up
-    piece.rotate(3);
-    dropStart = Date.now();
-  } else if (k === 37) { // Player holding left
-    piece.moveLeft();
-  } else if (k === 39) { // Player holding right
-    piece.moveRight();
-  } else if (k === 83) { // Player pressed s
-    piece.rotate(3);
-    dropStart = Date.now();
-  } else if (k === 68) { // Player pressed d
-    piece.rotate(1);
-    dropStart = Date.now();
-  }
-
-  if (gameScreen != INPLAY) {
-    return;
-  }
-
-  if (k === 40) { // Player holding down
-    piece.down();
-  } else if (k === 65) { // Player pressed a
-    holdPiece();
-  } else if (k === 70) { // Player pressed f
-    piece.rotate(2);
-    dropStart = Date.now();
-  } else if (k === 32) { // Player pressed space
-    while (piece.down() === 0) {
-      continue;
+  if (gameScreen == CONTROLS) {
+    switch (k) {
+      case 38: // Player pressed up
+        piece.rotate(3);
+        dropStart = Date.now();
+        break;
+      case 37: // Player holding left
+        piece.moveLeft();
+        break;
+      case 39: // Player holding right
+        piece.moveRight();
+        break;
+      case 83: // Player pressed s
+        piece.rotate(3);
+        dropStart = Date.now();
+        break;
+      case 68: // Player pressed d
+        piece.rotate(1);
+        dropStart = Date.now();
+        break;
     }
+  } else if (gameScreen == INPLAY) {
+    switch (k) {
+      case 38: // Player pressed up
+        piece.rotate(3);
+        dropStart = Date.now();
+        break;
+      case 37: // Player holding left
+        piece.moveLeft();
+        break;
+      case 39: // Player holding right
+        piece.moveRight();
+        break;
+      case 83: // Player pressed s
+        piece.rotate(3);
+        dropStart = Date.now();
+        break;
+      case 68: // Player pressed d
+        piece.rotate(1);
+        dropStart = Date.now();
+        break;
+      case 40: // Player holding down
+        piece.rotate(1);
+        dropStart = Date.now();
+        break;
+      case 65: // Player pressed a
+        holdPiece();
+        break;
+      case 70: // Player pressed f
+        piece.rotate(2);
+        dropStart = Date.now();
+        break;
+      case 32: // Player pressed space
+        while (piece.down() === 0) {
+          continue;
+        }
+        break;
+      case 82: // Player pressed r
+        hideBottomMainMenuBtn();
+        hideAndClearResultsCard();
+        hideContinueBtns();
+        reset();
+        break;
+      case 81: // Player pressed q
+        goToMainMenu();
+        break;
+    }
+  } else if (gameScreen == GAMEOVER) {
+    switch (k) {
+      case 82: // Player pressed r
+        hideBottomMainMenuBtn();
+        hideAndClearResultsCard();
+        hideContinueBtns();
+        reset();
+        break;
+    }
+  } else {
+    return;
   }
 }
 
@@ -1837,37 +1390,34 @@ function drawBoard() {
   }
 }
 
-function drawBorders() {
-  context.fillStyle = topBarColor;
+function drawBorders(color) {
+  context.fillStyle = color;
+
+  // draw divider between previews and hold
   context.fRect((sideBarX + 0.5) * tilesz,
     (TOPSPACE + BOARDHEIGHT - 3.5) * tilesz,
     (RIGHTSPACE - 1) * tilesz,
     thickLine * tilesz);
 
   // make boundry around game board
-  context.fRect(LEFTSPACE * tilesz - 1,
+  context.fRect(LEFTSPACE * tilesz -1,
     TOPSPACE * tilesz,
-    thickLine * tilesz,
-    (BOARDHEIGHT + thickLine) * tilesz - 1);
-  context.fRect((sideBarX - thickLine) * tilesz + 1,
-    TOPSPACE * tilesz,
-    thickLine * tilesz,
-    (BOARDHEIGHT + thickLine) * tilesz - 1);
-  context.fRect(LEFTSPACE * tilesz,
-    (TOPSPACE + BOARDHEIGHT) * tilesz,
     (sideBarX - LEFTSPACE) * tilesz,
-    (thickLine) * tilesz);
+    (BOARDHEIGHT + thickLine) * tilesz - 1);
+
+  drawBoard();
+
 };
 
 function initSideBoard() {
   // draw all canvas black
-  setColor('black');
+  setColor('#111');
   context.fRect(0, 0,
     canvas.width,
     canvas.height);
   
-  drawBorders( '#99D3DF' );
-  drawStatusBar();
+  drawBorders( '#059BB2' );
+  //drawStatusBar();
   // line seperating preview from hold
   //context.fillStyle = '#99D3DF';
 }
@@ -1889,26 +1439,6 @@ function main() {
   if (!done) {
     requestAnimationFrame(main);
   }
-}
-
-function initControlsTest() {
-  piece = null;
-  BOARDWIDTH = 9; // don't like that I'm changing something that was supposed to be constant
-  board = initBoard(BOARDHEIGHT, BOARDWIDTH);
-  boardX = .75;
-  isPieceHeld = true;
-  done = false;
-  gdone = false;
-  //recentWin = false;
-  gameScreen = CONTROLS;
- // drawMainMenu();
- // gameScreen = MAINMENU;
-  //dropStart = Date.now();
-  var p = pieces[5];
-  piece = new Piece(p[0], p[1],  5, 6);
-  piece.draw(context);
-  //boardX = ( canvas.width - BOARDWIDTH * tilesz ) / 2;
-
 }
 
 
@@ -1941,7 +1471,6 @@ function play() {
   initGame();
   drawBoard();
   main();
-  drawMainMenu();
   gameScreen = MAINMENU;
 }
 

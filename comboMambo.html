@@ -1,36 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
+    <meta name="description" content="A simple web game where the goal is to start a combo and see how long you can make it.">
 		<title>C-c-c-combo</title>
-		<style>
-			html { background: #F7F7F7;
-                touch-action: pinch-zoom;
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="comboMambo.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" rel="stylesheet">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-164343861-1"></script>
+    <link rel="manifest" href="manifest.json" />
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-164343861-1');
+    </script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').then(function(registration) {
+            // Registration was successful
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            // registration failed :(
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
       }
-			#board {
-				display: inline-block;
-				border: 2px solid black;
-				background: white;
-			}
-
-      .centered {
-        text-align: center;
-      }
-		</style>
-<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164343861-1"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-gtag('config', 'UA-164343861-1');
-</script>
+    </script>
 	</head>
 	<body onload="play()">
-      <div class="centered">
-		   <canvas id="board">
-		   </canvas>
+    <canvas class="dontShow" id="board"></canvas>
+    <div id='canvas-overlay' hidden></div>
+    <div id='game-bg'></div>
+    <div class="homescreen-buttons" id="homescreen-buttons">
+      <div style='display: flex; width: 48vh; margin: auto; flex-direction: column'>
+        <button class='piece' id="about-btn">Combo Mambo</button>
+        <div style='display: flex; width: 48vh;'>
+          <button class='piece' id="practice-btn">49 Piece Practice</button>
+          <button class='piece' id="challenge-btn">
+            <div></div>
+            <div><span>Expert</span></div>
+            <div></div>
+          </button>
+        </div>
+        <button class='piece' id="missions-btn">
+          <div><span>Missions</span></div>
+          <div></div>
+        </button>
+        <div style='display: flex; width: 48vh;'>
+          <button class="piece half" id="controls-btn">Controls</button>
+          <button class="piece half" id="settings-btn">Settings</button>
+        </div>
       </div>
+    </div>
+    <div id="score-bar-wrapper" class='dontShow'>
+      <div id="score-bar" class='score-bar'>
+        <span id="sb-combo-count" hidden>Combo: </span>
+        <span id="sb-best-combo" hidden>Best: </span>
+        <span id="sb-mission-number" hidden>Mission: </span>
+      </div>
+    </div>
+    <div id="results-card" class="card dontShow">
+      <h2 id="rs-title"></h2>
+      <div id="rs-combo"></div>
+      <div id="rs-best-combo"></div>
+      <div id="rs-pieces"></div>
+      <div id="rs-score"></div>
+      <div id="rs-rank"></div>
+    </div>
+    <div id="missions-list" hidden>
+      <h1>Missions</h1>
+      <div id="missions">
+        <button value=1 data-rank='F'>1: </button>
+        <button value=2  data-rank='F' disabled>2: </button>
+        <button value=3  data-rank='F' disabled>3: </button>
+        <button value=4  data-rank='F' disabled>4: </button>
+        <button value=5  data-rank='F' disabled>5: </button>
+        <button value=6  data-rank='F' disabled>6: </button>
+        <button value=7  data-rank='F' disabled>7: </button>
+        <button value=8  data-rank='F' disabled>8: </button>
+        <button value=9  data-rank='F' disabled>9: </button>
+        <button value=10 data-rank='F' disabled>10: </button>
+        <button value=11 data-rank='F' disabled>11: </button>
+        <button value=12 data-rank='F' disabled>12: </button>
+      </div>
+    </div>
+    <div id="controls-panel" hidden>
+      <h1>Controls</h1>
+      <nav>
+        <button id="mobi-controls-btn">Mobile
+        </button><button id="comp-controls-btn">Computer
+        </button>
+      </nav>
+      <div id="controls-card" class="card">
+        <fieldset id="computer-controls">
+          <label><kbd>&#8592;</kbd>
+            <span>slide left</span></label>
+          <label><kbd>&#8594;</kbd>
+            <span>slide right</span></label>
+          <label><kbd>&#8593;</kbd> or <kbd>s</kbd>
+            <span>rotate left</span></label>
+          <label><kbd>&#8595;</kbd> or <kbd>d</kbd>
+            <span>rotate right</span></label>
+          <label><kbd>a</kbd>
+            <span>store piece</span></label>
+          <label><kbd>space</kbd>
+            <span>drop piece</span></label>
+        </fieldset>
+        <fieldset id="mobile-controls" hidden>
+          <label><i>swipe left</i>
+            <span>slide left</span></label>
+          <label><i>swipe right</i>
+            <span>slide right</span></label>
+          <label><i>tap left</i> 
+            <span>rotate left</span></label>
+          <label><i>tap right</i> 
+            <span>rotate right</span></label>
+          <label><i>swipe up</i>
+            <span>store piece</span></label>
+          <label><i>swipe down</i>
+            <span>drop piece</span></label>
+        </fieldset>
+      </div>
+    </div>
+    <div id="settings-screen" hidden>
+      <h1>Settings</h1>
+      <form name="settings" id="settings-card" class="card">
+        <fieldset>
+          <legend>Randomizer:</legend>
+          <label for="1">
+            <input type="radio" id="1" name="bag" value="1" checked>
+            1 Bag</label>
+          <label for="2">
+            <input type="radio" id="2" name="bag" value="2">
+            2 Bag</label>
+          <label for="7">
+            <input type="radio" id="7" name="bag" value="7">
+            7 Bag</label>
+          <label for="random">
+            <input type="radio" id="random" name="bag" value="0">
+            Random</label>
+        </fieldset>
+        <fieldset id="settings-theme" hidden>
+          <legend>Theme:</legend>
+          <label for="tropical">
+            <input type="radio" id="tropical" name="theme" value="tropical" checked>
+            Tropical</label>
+          <label for="pastel">
+            <input type="radio" id="pastel" name="theme" value="pastel">
+            Pastel</label>
+        </fieldset>
+      </form>
+    </div>
+    <div id="continue-buttons" class="dontShow">
+      <button id="continue-btn" class="lpiece" >Continue</button>
+      <button id="cb-replay" class="lpiece" hidden>Replay Mission</button>
+    </div>
+    <div id="main-menu-bottom" class="dontShow">
+      <button class="lpiece" id="main-menu-btn">Main Menu</button>
+    </div>
     <script src="bricks.js"></script>
     <script src="missions.js"></script>
 		<script src="comboMambo.js"></script>
