@@ -1,0 +1,14 @@
+{
+  "name": "Combo Mambo",
+  "short_name": "CM",
+  "description": "How long can you keep a combo?",
+  "start_url": "../comboMambo.html",
+  "background_color": "#222222",
+  "display": "fullscreen",
+  "theme_color": "#059BB2",
+  "icons": [{
+    "src": "cmIcon256.png",
+    "sizes": "256x256",
+    "type": "image/png"
+  }]
+}
