@@ -1,0 +1,426 @@
+html { 
+  touch-action: pinch-zoom;
+  background: #f6f6f6;
+  //font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Staatliches', cursive;
+  font-size: 5vh;
+
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+  /*
+  text-shadow: 0 2px 2px rgba(0,0,0,.5);
+  text-shadow: 0px 1px 0 #111,
+               -1px 1px 0 #111,
+               -1px 0px 0 #111,
+               -1px 2px 0 #111,
+               -2px 2px 0 #111;
+  text-shadow: 
+    1px 0px 0px #222, 1px 1px 1px #111, 
+    2px 1px 1px #222, 1px 2px 1px #111,
+    3px 2px 1px #222;
+  text-shadow: 
+    .2vh 0px 0px #222, .2vh .2vh .1vh #111, 
+    .4vh .2vh .1vh #222, .2vh .4vh .1vh #111,
+    .6vh .4vh .1vh #222;
+  text-shadow: 
+    .1vh 0px 0px #222, .1vh .1vh .1vh #111, 
+    .3vh .2vh .1vh #222, .2vh .3vh .1vh #111,
+    .4vh .3vh .1vh #222;
+    */
+  text-shadow: 
+    .04vh 0.03vh 0.025vh #222, .08vh .06vh 0.05vh #222, 
+    .12vh .09vh 0.05vh #222, .16vh .12vh 0.1vh #222,
+    .20vh .15vh 0.1vh #222, .24vh .18vh 0.1vh #222,
+    .28vh .21vh 0.1vh #222, .32vh .24vh 0.1vh #222,
+    .36vh .27vh 0.1vh #222, .40vh .30vh 0.1vh #222;
+  background: #222;
+  color: #f7f7f7;
+}
+
+body {
+  margin: auto;
+  padding: 0;
+  display: flex;
+  flex-flow: column;
+  height: 100vh;
+  width: 60vh;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: inherit;
+  font-family: inherit;
+  text-shadow: inherit;
+  text-align: center;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  filter: brightness(60%);
+  cursor: default;
+}
+
+nav {
+  margin-left: 4vh;
+  display: flex;
+  margin-right: 4vh;
+}
+nav button {
+  padding: 1vh;
+  margin: 0vh;
+  flex-grow: 1;
+  background: none;
+}
+nav button.selected {
+  background: #690;
+  border-top: .3vh solid #690;
+  border-right: .3vh solid #340;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+}
+
+fieldset label {
+  display: block;
+}
+
+input[type="radio"] {
+  vertical-align: middle;
+  margin-top: -1vh;
+}
+
+kbd {
+  border-radius: .75vh;
+  margin: .5vh;
+  margin-left: 1vh;
+  text-shadow: none;
+  background-color: #eee;
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  border: .2vh solid #b4b4b4;
+  box-shadow: 0 .25vh .25vh rgba(0, 0, 0, .2), 
+    0 .5vh 0 0 rgba(255, 255, 255, .7) inset;
+  color: #333;
+  display: inline-block;
+  font-size: .85em;
+  font-weight: 700;
+  line-height: 1;
+  padding: .25vh 1vh;
+  white-space: nowrap;
+}
+i {
+  text-shadow: none;
+  font-size: .8em;
+  color: #222;
+  margin: .5vh;
+}
+
+h1 {
+  width: 48vh;
+  margin: 2vh 6vh;
+  height: 12vh;
+  line-height: 12vh;
+  font-size: 8vh;
+  text-align: center;
+  background: #059BB2;
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  border: .3vh solid #059BB2;
+  border-right: .3vh solid #035966;
+  border-bottom: .3vh solid #024853;
+  letter-spacing: .1em;
+}
+h2 {
+  margin-top: 0vh;
+  margin-bottom: 1vh;
+  letter-spacing: .05em;
+}
+
+#board2 {
+  margin-top: 1%;
+  display: inline-block;
+  border: 2px solid black;
+  position: absolute;
+}
+#board {
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: -2;
+}
+
+#canvas-overlay {
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  width: 60vh;
+  height: 100vh;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: -1;
+  background-color: rgba(0,0,0,0.5);
+}
+
+#game-bg {
+  height: 100vh;
+  background: #111;
+  width: 60vh;
+  z-index: -3;
+  position: absolute;
+  margin-left: auto;
+  margin-right: auto;
+  left: 0;
+  right: 0;
+  text-align: center;
+
+}
+
+.centered {
+  margin: auto;
+}
+.homescreen-buttons {
+  display: flex;
+  flex-direction: column;
+}
+.dontShow {
+  display: none;
+}
+.flex-wrapper {
+  display: flex;
+}
+#score-bar-wrapper {
+  margin-left: auto;
+  margin-right: auto;
+}
+.score-bar {
+  display: flex;
+  width: 60vh;
+  height: 10vh;
+  color: #f7f7f7;
+  box-shadow: 0 .2vh .4vh rgba(0, 0, 0, 0.5);
+
+  background: rgb(231,1,87);
+  background: linear-gradient(120deg, rgba(231,1,87,1) 18%, rgba(247,92,24,1) 30%, rgba(244,208,72,1) 45%, rgba(201,211,26,1) 55%, rgba(102,153,0,1) 70%, rgba(5,155,178,1) 82%);
+}
+.score-bar span {
+  margin: auto;
+}
+
+
+#main-menu-bottom {
+  margin-top: auto;
+  margin-bottom: 2vh;
+}
+
+.lpiece {
+  width: 48vh;
+  margin: 2vh 6vh;
+  height: 12vh;
+  line-height: 11.5vh;
+  font-size: 8vh;
+  text-align: center;
+  background: #059bb2;
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  border: .3vh solid #059bb2;
+  box-shadow: 0 .2vh .4vh rgba(0, 0, 0, 0.5);
+  border-right: .3vh solid #035966;
+  border-bottom: .3vh solid #024853;
+}
+button.lpiece:hover:enabled {
+  border: .30vh solid #f7f7f7;
+}
+
+.card {
+  color: #f7f7f7;
+  margin-left: auto;
+  margin-right: auto;
+  background: #690;
+  width: 52vh;
+  padding: 2vh 3vh 2vh 2vh;
+  box-shadow: 0px 2px 1px -1px rgba(0, 0, 0, 0.2),0px 1px 1px 0px rgba(0, 0, 0, 0.14),0px 1px 3px 0px rgba(0,0,0,.12);
+
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+
+  border: .3vh solid #690;
+  border-right: .3vh solid #340;
+  border-bottom: .3vh solid #230;
+}
+#results-card {
+  margin-top: 4vh;
+  margin-bottom: 2vh;
+  padding-bottom: 3vh;
+  box-shadow: 0 .2vh .4vh rgba(0, 0, 0, 0.5);
+}
+#results-card h2 {
+  text-align: center;
+}
+#results-card div {
+  display: flex;
+}
+#results-card span {
+  margin-left: auto;
+  margin-right: 1vh;
+}
+
+
+#missions {
+  display: flex;
+  flex-flow: row;
+  width: 60vh;
+  flex-wrap: wrap;
+  flex-direction: row;
+  margin-left: auto;
+  margin-right: auto;
+  justify-content: center;
+}
+#missions button {
+  width: 14vh;
+  height: 14vh;
+  margin: 1.5vh;
+  background: #C9D31A;
+  text-align: left;
+  padding: 3vh;
+  color: #f7f7f7;
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  border: .25vh solid #C9D31A;
+}
+#missions button:hover:enabled {
+  border: .25vh solid #f7f7f7;
+}
+
+
+#controls-panel label {
+  display: flex;
+}
+#controls-panel label span {
+  margin-left: auto;
+}
+
+#settings-card label {
+  margin-left: 2vh;
+}
+
+
+button.piece {
+  color: #f7f7f7;
+  font-size: 6vh;
+}
+button.piece span {
+  margin: auto;
+}
+
+#about-btn {
+  width: 48vh;
+  height: 12vh;
+  background: #059BB2;
+  margin-top: 2vh;
+  font-size: 9vh;
+}
+
+#practice-btn {
+  text-align: left;
+  width: 24vh;
+  height: 24vh;
+  background: #C9D31A;
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  border: 1vh solid #C9D31A;
+}
+#practice-btn:hover, #practice-btn:active {
+  border: 1vh solid #C9D31A;
+}
+#practice-btn div {
+  margin-left: 1vh;
+}
+
+#missions-btn {
+  margin-right: 12vh;
+}
+#missions-btn div:first-child {
+  width: 36vh;
+  height: 12vh;
+  background: #f75c18;
+  display: flex;
+}
+#missions-btn div:last-child {
+  width: 12vh;
+  height: 12vh;
+  margin-left: 24vh;
+  background: #f75c18;
+}
+
+#challenge-btn {
+  margin-top: 12vh;
+}
+#challenge-btn div {
+  width: 24vh;
+  height: 12vh;
+  background: #f4d048;
+  display: flex;
+}
+#challenge-btn div:first-child, #challenge-btn div:last-child {
+  width: 12vh;
+  height: 12vh;
+  background: #f4d048;
+  margin-left: 12vh;
+}
+
+button.half {
+  width: 24vh;
+  height: 12vh;
+  background: #059bb2;
+  box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+  border: .25vh solid #059bb2;
+}
+button.half:hover {
+  border: .25vh solid #eee;
+}
+
+button.piece:hover,
+button.piece:active {
+  /* Start the shake animation and make the animation last for 0.5 seconds */
+  animation: shake 1s;
+
+  /* When the animation is finished, start again */
+  animation-iteration-count: infinite;
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
