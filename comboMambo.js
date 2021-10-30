@@ -1347,6 +1347,7 @@ function key(k) {
         }
         break;
       case 82: // Player pressed r
+        hideCanvasOverlay();
         hideBottomMainMenuBtn();
         hideAndClearResultsCard();
         hideContinueBtns();
@@ -1362,6 +1363,7 @@ function key(k) {
         hideBottomMainMenuBtn();
         hideAndClearResultsCard();
         hideContinueBtns();
+        hideCanvasOverlay();
         reset();
         break;
     }
